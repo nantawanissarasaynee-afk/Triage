@@ -1,0 +1,3001 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TRIAGE โรงพยาบาลหลวงพ่อเปิ่น - ระบบคัดกรอง MOPH ED Triage 5 ระดับ</title>
+  <!-- Google Fonts: Sarabun & Prompt for Hospital Standard Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       CSS STYLES - ออกแบบให้ตรงตามหน้าจอ รพ.พุทธมณฑล (Single-File CSS)
+       ========================================================================== */
+    :root {
+      --primary-green: #1b5e20;
+      --primary-dark: #144918;
+      --primary-light: #2e7d32;
+      --bg-body: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      
+      /* MOPH ED Triage 5-Level Colors */
+      --color-lvl1: #dc2626; /* Resuscitation (Red) */
+      --color-lvl1-bg: #fee2e2;
+      --color-lvl2: #e11d48; /* Emergency (Pink/Rose) */
+      --color-lvl2-bg: #fce7f3;
+      --color-lvl3: #d97706; /* Urgency (Yellow/Amber) */
+      --color-lvl3-bg: #fef3c7;
+      --color-lvl4: #16a34a; /* Semi-Urgency (Green) */
+      --color-lvl4-bg: #dcfce7;
+      --color-lvl5: #64748b; /* Non-Urgent (White/Gray) */
+      --color-lvl5-bg: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', 'Sarabun', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      padding-bottom: 80px; /* เว้นที่ให้ Bottom Nav */
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Header Bar */
+    .top-header {
+      background-color: var(--primary-green);
+      color: #ffffff;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-img {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+      padding: 2px;
+      object-fit: contain;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-text span {
+      font-size: 11px;
+      opacity: 0.85;
+      font-weight: 400;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1080px;
+      margin: 16px auto;
+      padding: 0 16px;
+    }
+
+    /* Page Navigation Tabs */
+    .view-section {
+      display: none;
+    }
+    .view-section.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 12px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header.green {
+      background: var(--primary-green);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    /* Alert Banner (Sound) */
+    .sound-alert-bar {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .sound-title {
+      color: #1e40af;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-sound {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-sound.muted {
+      background: #94a3b8;
+    }
+
+    /* Dashboard Stats 5 Colors */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stats-grid .stat-box:last-child {
+        grid-column: span 2;
+      }
+    }
+
+    .stat-box {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      text-align: left;
+      position: relative;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .stat-box.resuscitation { border-top: 4px solid var(--color-lvl1); }
+    .stat-box.emergency { border-top: 4px solid var(--color-lvl2); background: #fff5f8; }
+    .stat-box.urgency { border-top: 4px solid var(--color-lvl3); }
+    .stat-box.semi-urgency { border-top: 4px solid var(--color-lvl4); }
+    .stat-box.non-urgency { border-top: 4px solid var(--color-lvl5); }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-box.resuscitation .stat-number { color: var(--color-lvl1); }
+    .stat-box.emergency .stat-number { color: var(--color-lvl2); }
+    .stat-box.urgency .stat-number { color: var(--color-lvl3); }
+    .stat-box.semi-urgency .stat-number { color: var(--color-lvl4); }
+    .stat-box.non-urgency .stat-number { color: var(--color-lvl5); }
+
+    .stat-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Big Green Action Button */
+    .btn-big-action {
+      background: var(--primary-green);
+      color: white;
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(27, 94, 32, 0.25);
+      margin-bottom: 16px;
+      transition: background 0.15s;
+    }
+    .btn-big-action:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Table Styles */
+    .table-container {
+      overflow-x: auto;
+    }
+    table.custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+    table.custom-table th {
+      background: var(--primary-green);
+      color: white;
+      padding: 12px 16px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    table.custom-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    table.custom-table tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    /* Badge Pills for Triage */
+    .triage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .triage-badge.lvl1 { background: var(--color-lvl1-bg); color: var(--color-lvl1); border-color: #fca5a5; }
+    .triage-badge.lvl2 { background: var(--color-lvl2-bg); color: var(--color-lvl2); border-color: #f9a8d4; }
+    .triage-badge.lvl3 { background: var(--color-lvl3-bg); color: var(--color-lvl3); border-color: #fde68a; }
+    .triage-badge.lvl4 { background: var(--color-lvl4-bg); color: var(--color-lvl4); border-color: #86efac; }
+    .triage-badge.lvl5 { background: var(--color-lvl5-bg); color: var(--color-lvl5); border-color: #cbd5e1; }
+
+    /* Form Fields */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group.full {
+      grid-column: span 2;
+    }
+    @media (max-width: 640px) {
+      .form-group.full {
+        grid-column: span 1;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    label span.required {
+      color: #dc2626;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      background-color: #ffffff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary-green);
+      box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.15);
+    }
+
+    /* Segmented Button Groups (Airway, AVPU, CRT, Service Point) */
+    .segmented-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .segmented-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      color: #475569;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .segmented-btn:hover {
+      background: #e2e8f0;
+    }
+    .segmented-btn.active {
+      background: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* AI / Rule Recommendation Banner */
+    .recommendation-box {
+      background: #144918;
+      color: white;
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .rec-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .rec-icon {
+      font-size: 24px;
+    }
+    .rec-text h4 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .rec-text p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    .btn-apply-rec {
+      background: white;
+      color: var(--primary-green);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-apply-rec:hover {
+      background: #f1f5f9;
+    }
+
+    /* 5 Triage Level Selection Big Buttons */
+    .triage-level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .triage-level-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .triage-level-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .triage-level-btn:hover {
+      border-color: #94a3b8;
+    }
+    .triage-level-btn.active {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      font-weight: 600;
+    }
+    .triage-level-btn.lvl1.active { border-color: var(--color-lvl1); background: #fef2f2; }
+    .triage-level-btn.lvl2.active { border-color: var(--color-lvl2); background: #fff1f2; }
+    .triage-level-btn.lvl3.active { border-color: var(--color-lvl3); background: #fffbeb; }
+    .triage-level-btn.lvl4.active { border-color: var(--color-lvl4); background: #f0fdf4; }
+    .triage-level-btn.lvl5.active { border-color: var(--color-lvl5); background: #f8fafc; }
+
+    .lvl-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lvl-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+    .lvl-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .lvl-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .lvl-badge-time {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* Range Sliders for SIRS & Pain Score */
+    .slider-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .slider-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-green);
+    }
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: #cbd5e1;
+      border-radius: 4px;
+      outline: none;
+    }
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    /* Patient Card (List View) */
+    .patient-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: transform 0.15s;
+    }
+    .patient-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+    .patient-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .patient-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .patient-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .patient-complaint {
+      font-size: 13px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary-green);
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: white;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 100;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      flex: 1;
+      height: 100%;
+      transition: color 0.15s;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+    .nav-icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+    /* Floating Quick Guide Button */
+    .btn-quick-guide {
+      position: fixed;
+      bottom: 76px;
+      right: 16px;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      cursor: pointer;
+      z-index: 90;
+      transition: all 0.15s;
+    }
+    .btn-quick-guide:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    /* Modal Dialog */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      background: var(--primary-green);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 14px 14px 0 0;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #1e293b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.25s ease-out;
+    }
+    .toast.success { background: #15803d; }
+    .toast.error { background: #b91c1c; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Hospital Header -->
+  <header class="top-header">
+    <div class="brand-group">
+      <img src="./assets/aistudio/IMG_1767_3b31df57.webp" onerror="this.src='/assets/aistudio/IMG_1767_3b31df57.webp'" class="brand-logo-img" alt="ตราสัญลักษณ์ รพ.หลวงพ่อเปิ่น">
+      <div class="brand-text">
+        <h1 id="appHospitalTitle">TRIAGE</h1>
+        <span id="appHospitalSub">โรงพยาบาลหลวงพ่อเปิ่น</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <a href="https://line.me/ti/g2/V1UNTdetwPj4fS9-3Z3mzS3r-pzF8klqZLmyaQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; background: #06C755; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+        <span>💬</span>
+        <span>LINE OpenChat: Triage LPH</span>
+      </a>
+      <div class="user-profile" onclick="openSettingsModal()" title="คลิกเพื่อตั้งค่าระบบ / LINE OpenChat">
+        <span>👤 <span id="staffDisplay">พว.นันทวัน อิสระเสนีย์ พยาบาลวิชาชีพ</span></span>
+        <span>⚙️</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewports -->
+  <main class="container">
+
+    <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+    <section id="viewDashboard" class="view-section active">
+      <!-- ER Real-time Sound Alert Banner & LINE OpenChat -->
+      <div class="sound-alert-bar" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <div class="sound-title" style="flex: 1; min-width: 260px;">
+          <span>📢 ระบบเสียงแจ้งเตือนเคสใหม่ในห้องฉุกเฉิน (ER Real-time Alert)</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <a href="https://line.me/ti/g2/V1UNTdetwPj4fS9-3Z3mzS3r-pzF8klqZLmyaQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer" class="btn-sound" style="background: #06C755; text-decoration: none;">
+            <span>💬 เข้ากลุ่ม OpenChat Triage LPH</span>
+          </a>
+          <button class="btn-sound" id="btnToggleSound" onclick="toggleAudioAlert()">
+            <span id="soundIcon">🔊</span> <span id="soundText">เปิดเสียงอยู่</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ผู้รับบริการวันนี้ & สถิติ 5 ระดับ -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👥 ผู้รับบริการวันนี้</div>
+          <div style="font-size: 14px; font-weight: 500; color: #475569;">
+            รวมทั้งหมด <strong id="todayTotalCount" style="color: var(--primary-green); font-size: 16px;">0</strong> ราย
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="stats-grid">
+            <div class="stat-box resuscitation">
+              <div class="stat-number" id="countLvl1">0</div>
+              <div class="stat-label">
+                <span class="stat-dot" style="background: var(--color-lvl1);"></span> Resuscitation
+              </div>
+            </div>
+            <div class="stat-box emergency">
+              <div class="stat-number" id="countLvl2">0</div>
+              <div class="stat-label">
+                <span class="stat-dot" style="background: var(--color-lvl2);"></span> Emergency
+              </div>
+            </div>
+            <div class="stat-box urgency">
+              <div class="stat-number" id="countLvl3">0</div>
+              <div class="stat-label">
+                <span class="stat-dot" style="background: var(--color-lvl3);"></span> Urgency
+              </div>
+            </div>
+            <div class="stat-box semi-urgency">
+              <div class="stat-number" id="countLvl4">0</div>
+              <div class="stat-label">
+                <span class="stat-dot" style="background: var(--color-lvl4);"></span> Semi Urgency
+              </div>
+            </div>
+            <div class="stat-box non-urgency">
+              <div class="stat-number" id="countLvl5">0</div>
+              <div class="stat-label">
+                <span class="stat-dot" style="background: var(--color-lvl5);"></span> Non Urgency
+              </div>
+            </div>
+          </div>
+          
+          <!-- Quality KPI Strip: Under-Triage, Over-Triage & Re-Triage -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-color);">
+            <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px 12px; cursor: pointer;" onclick="openQuickGuideTab(1)" title="คลิกดูเกณฑ์ Under-Triage">
+              <div style="font-size: 12px; font-weight: 600; color: #9f1239; display: flex; align-items: center; justify-content: space-between;">
+                <span>⚠️ Under-Triage</span>
+                <span style="font-size: 10px; background: white; padding: 2px 6px; border-radius: 10px; border: 1px solid #fecdd3;">เกณฑ์ &lt; 5%</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 4px;">
+                <span id="kpiUnderCount" style="font-size: 20px; font-weight: 700; color: #e11d48;">0</span>
+                <span id="kpiUnderPct" style="font-size: 12px; color: #881337;">(0.0%)</span>
+              </div>
+            </div>
+
+            <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 10px 12px; cursor: pointer;" onclick="openQuickGuideTab(1)" title="คลิกดูเกณฑ์ Over-Triage">
+              <div style="font-size: 12px; font-weight: 600; color: #854d0e; display: flex; align-items: center; justify-content: space-between;">
+                <span>🔽 Over-Triage</span>
+                <span style="font-size: 10px; background: white; padding: 2px 6px; border-radius: 10px; border: 1px solid #fef08a;">เกณฑ์ 25-50%</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 4px;">
+                <span id="kpiOverCount" style="font-size: 20px; font-weight: 700; color: #ca8a04;">0</span>
+                <span id="kpiOverPct" style="font-size: 12px; color: #713f12;">(0.0%)</span>
+              </div>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; cursor: pointer;" onclick="openQuickGuideTab(2)" title="คลิกดูรอบเวลา Re-Triage">
+              <div style="font-size: 12px; font-weight: 600; color: #166534; display: flex; align-items: center; justify-content: space-between;">
+                <span>🔄 Re-Triage</span>
+                <span style="font-size: 10px; background: white; padding: 2px 6px; border-radius: 10px; border: 1px solid #bbf7d0;">ประเมินซ้ำ</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 4px;">
+                <span id="kpiRetriageCount" style="font-size: 20px; font-weight: 700; color: #16a34a;">0</span>
+                <span style="font-size: 12px; color: #14532d;">ครั้ง</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 13px; color: #64748b; text-align: right; margin-top: 10px;">
+            📅 เดือนนี้: <strong id="monthTotalCount">0</strong> ราย
+          </div>
+        </div>
+      </div>
+
+      <!-- ปุ่มใหญ่: บันทึก Triage ใหม่ -->
+      <button class="btn-big-action" onclick="switchView('form')">
+        <span>✚</span> บันทึก Triage ใหม่
+      </button>
+
+      <!-- รายการผู้ป่วยล่าสุด 20 ราย -->
+      <div class="card">
+        <div class="card-header green">
+          <div class="card-title">🕒 รายการผู้ป่วยล่าสุด (แสดงสูงสุด 20 ราย)</div>
+        </div>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>ชื่อผู้ป่วย</th>
+                <th>ระดับความรุนแรง</th>
+                <th>จุดบริการ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="recentTableBody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">กำลังโหลดข้อมูล...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: FORM (บันทึก Triage) ==================== -->
+    <section id="viewForm" class="view-section">
+      <form id="triageForm" onsubmit="handleTriageSubmit(event)">
+        
+        <!-- ข้อมูลผู้ป่วย -->
+        <div class="card">
+          <div class="card-header green">
+            <div class="card-title">👤 ข้อมูลผู้ป่วย</div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>เลขบัตรประชาชน (CID) <span class="required">*</span></label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="patientCid" maxlength="13" placeholder="กรอก 13 หลัก ระบบค้นหาอัตโนมัติ" required>
+                  <button type="button" class="segmented-btn" onclick="generateRandomCid()" style="flex: none; padding: 0 16px;">สุ่ม CID</button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>คำนำหน้า <span class="required">*</span></label>
+                <select id="patientPrefix" required>
+                  <option value="นาย">นาย</option>
+                  <option value="นาง">นาง</option>
+                  <option value="นางสาว" selected>น.ส.</option>
+                  <option value="ด.ช.">ด.ช.</option>
+                  <option value="ด.ญ.">ด.ญ.</option>
+                  <option value="พระภิกษุ">พระภิกษุ</option>
+                  <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>ชื่อ-นามสกุล <span class="required">*</span></label>
+                <input type="text" id="patientFullName" placeholder="ชื่อ นามสกุล" required>
+              </div>
+
+              <div class="form-group">
+                <label>อายุ (ปี)</label>
+                <input type="number" id="patientAge" placeholder="อายุ" min="0" max="130" value="35">
+              </div>
+
+              <div class="form-group">
+                <label>HN</label>
+                <input type="text" id="patientHn" placeholder="HN (เช่น 0006387)">
+              </div>
+
+              <div class="form-group full">
+                <label>วันที่/เวลาที่มา <span class="required">*</span></label>
+                <input type="datetime-local" id="patientVisitTime" required>
+              </div>
+
+              <div class="form-group full">
+                <label>อาการสำคัญ (Chief Complaint) <span class="required">*</span></label>
+                <textarea id="patientComplaint" rows="2" placeholder="ระบุอาการที่มา เช่น เจ็บแน่นหน้าอก หายใจเหนื่อย ปวดท้อง..." oninput="evaluateTriageCriteria()" required></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Survey -->
+        <div class="card">
+          <div class="card-header green">
+            <div class="card-title">🩺 Primary Survey</div>
+          </div>
+          <div class="card-body">
+            
+            <!-- 1. AIRWAY -->
+            <div class="form-group">
+              <label>🫁 1. AIRWAY</label>
+              <div class="segmented-group" id="groupAirway">
+                <div class="segmented-btn active" data-val="พูดได้ปกติ" onclick="selectSegmented('groupAirway', this)">พูดได้ปกติ</div>
+                <div class="segmented-btn" data-val="ไม่มีสิ่งอุดกั้น" onclick="selectSegmented('groupAirway', this)">ไม่มีสิ่งอุดกั้น</div>
+                <div class="segmented-btn" data-val="มีสิ่งอุดกั้น" onclick="selectSegmented('groupAirway', this)">มีสิ่งอุดกั้น</div>
+              </div>
+            </div>
+
+            <!-- 2. BREATHING -->
+            <div class="form-group">
+              <label>💨 2. BREATHING</label>
+              <div class="form-grid">
+                <div>
+                  <label>RR (/min)</label>
+                  <input type="number" id="vitalsRR" placeholder="18" value="18" oninput="evaluateTriageCriteria()">
+                </div>
+                <div>
+                  <label>O2 Sat (%RA)</label>
+                  <input type="number" id="vitalsO2" placeholder="98" value="98" oninput="evaluateTriageCriteria()">
+                </div>
+                <div class="full">
+                  <label>Lung Sound</label>
+                  <input type="text" id="vitalsLung" placeholder="Clear / Wheezing / Crackle / Stridor" value="Clear">
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. CIRCULATION -->
+            <div class="form-group">
+              <label>❤️ 3. CIRCULATION</label>
+              <div class="form-grid">
+                <div>
+                  <label>PR (/min)</label>
+                  <input type="number" id="vitalsPR" placeholder="80" value="80" oninput="evaluateTriageCriteria()">
+                </div>
+                <div>
+                  <label>Body Temp (°C)</label>
+                  <input type="number" step="0.1" id="vitalsTemp" placeholder="36.5" value="36.5" oninput="evaluateTriageCriteria()">
+                </div>
+                <div class="full">
+                  <label>BP (mmHg) — ปกติ 90-140 / 60-90</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="number" id="vitalsSBP" placeholder="120" value="120" oninput="evaluateTriageCriteria()">
+                    <span>/</span>
+                    <input type="number" id="vitalsDBP" placeholder="80" value="80">
+                  </div>
+                </div>
+                <div>
+                  <label>CRT</label>
+                  <div class="segmented-group" id="groupCRT">
+                    <div class="segmented-btn active" data-val="<= 2 วินาที" onclick="selectSegmented('groupCRT', this)">≤ 2 วินาที</div>
+                    <div class="segmented-btn" data-val="> 2 วินาที" onclick="selectSegmented('groupCRT', this)">> 2 วินาที</div>
+                  </div>
+                </div>
+                <div>
+                  <label>Bleeding</label>
+                  <input type="text" id="vitalsBleeding" placeholder="ระบุ เช่น ไม่มี, แผลเลือดซึม, เลือดออกมาก" value="ไม่มี">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. DISABILITY -->
+            <div class="form-group">
+              <label>🧠 4. DISABILITY</label>
+              <div class="form-grid">
+                <div>
+                  <label>GCS (3-15)</label>
+                  <input type="number" id="vitalsGCS" min="3" max="15" value="15" oninput="evaluateTriageCriteria()">
+                </div>
+                <div>
+                  <label>AVPU</label>
+                  <div class="segmented-group" id="groupAVPU">
+                    <div class="segmented-btn active" data-val="A" onclick="selectSegmented('groupAVPU', this)">A</div>
+                    <div class="segmented-btn" data-val="V" onclick="selectSegmented('groupAVPU', this)">V</div>
+                    <div class="segmented-btn" data-val="P" onclick="selectSegmented('groupAVPU', this)">P</div>
+                    <div class="segmented-btn" data-val="U" onclick="selectSegmented('groupAVPU', this)">U</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SIRS Score Slider -->
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>SIRS Score (0-4) <small style="color: #64748b;">(Temp >38/<36, PR >90, RR >20, WBC >12k/<4k)</small></span>
+                <span class="slider-val" id="valSIRS">0</span>
+              </div>
+              <input type="range" id="sliderSIRS" min="0" max="4" value="0" oninput="updateSlider('SIRS', this.value)">
+              <div class="slider-ticks">
+                <span>0: ปกติ</span>
+                <span>2: SIRS Positive</span>
+                <span>4: วิกฤต</span>
+              </div>
+            </div>
+
+            <!-- Pain Score Slider -->
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Pain Score (0-10)</span>
+                <span class="slider-val" id="valPain">0</span>
+              </div>
+              <input type="range" id="sliderPain" min="0" max="10" value="0" oninput="updateSlider('Pain', this.value)">
+              <div class="slider-ticks">
+                <span>0 ไม่ปวด</span>
+                <span>5 ปานกลาง</span>
+                <span>10 ปวดมาก</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Triage Level Selection -->
+        <div class="card">
+          <div class="card-header green">
+            <div class="card-title">🎯 Triage Level <span class="required">*</span></div>
+          </div>
+          <div class="card-body">
+            
+            <!-- AI Recommendation Banner -->
+            <div class="recommendation-box" id="recBanner">
+              <div class="rec-content">
+                <span class="rec-icon">🤖</span>
+                <div class="rec-text">
+                  <h4 id="recLevelText">แนะนำ: Non Urgency</h4>
+                  <p id="recReasonText">Vital signs ปกติ หรือยังไม่ได้กรอกข้อมูลวิกฤต</p>
+                </div>
+              </div>
+              <button type="button" class="btn-apply-rec" onclick="applyRecommendation()">ใช้ค่านี้</button>
+            </div>
+
+            <!-- 5 Level Cards -->
+            <div class="triage-level-grid">
+              
+              <div class="triage-level-btn lvl1" onclick="selectTriageLevel(1)">
+                <div class="lvl-info">
+                  <span class="lvl-dot" style="background: var(--color-lvl1);"></span>
+                  <div>
+                    <div class="lvl-name">Resuscitation</div>
+                    <div class="lvl-desc">วิกฤต - รักษาทันที</div>
+                  </div>
+                </div>
+                <div class="lvl-badge-time">0 นาที</div>
+              </div>
+
+              <div class="triage-level-btn lvl2" onclick="selectTriageLevel(2)">
+                <div class="lvl-info">
+                  <span class="lvl-dot" style="background: var(--color-lvl2);"></span>
+                  <div>
+                    <div class="lvl-name">Emergency</div>
+                    <div class="lvl-desc">ฉุกเฉิน - ≤ 10 นาที</div>
+                  </div>
+                </div>
+                <div class="lvl-badge-time">≤ 10 นาที</div>
+              </div>
+
+              <div class="triage-level-btn lvl3" onclick="selectTriageLevel(3)">
+                <div class="lvl-info">
+                  <span class="lvl-dot" style="background: var(--color-lvl3);"></span>
+                  <div>
+                    <div class="lvl-name">Urgency</div>
+                    <div class="lvl-desc">เร่งด่วน - ≤ 30 นาที</div>
+                  </div>
+                </div>
+                <div class="lvl-badge-time">≤ 30 นาที</div>
+              </div>
+
+              <div class="triage-level-btn lvl4" onclick="selectTriageLevel(4)">
+                <div class="lvl-info">
+                  <span class="lvl-dot" style="background: var(--color-lvl4);"></span>
+                  <div>
+                    <div class="lvl-name">Semi Urgency</div>
+                    <div class="lvl-desc">กึ่งเร่งด่วน - ≤ 60 นาที</div>
+                  </div>
+                </div>
+                <div class="lvl-badge-time">≤ 60 นาที</div>
+              </div>
+
+              <div class="triage-level-btn lvl5 active" onclick="selectTriageLevel(5)" style="grid-column: span 2;">
+                <div class="lvl-info">
+                  <span class="lvl-dot" style="background: var(--color-lvl5);"></span>
+                  <div>
+                    <div class="lvl-name">Non Urgency</div>
+                    <div class="lvl-desc">ไม่เร่งด่วน - ≤ 120 นาที</div>
+                  </div>
+                </div>
+                <div class="lvl-badge-time">รอได้</div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- จุดบริการ -->
+        <div class="card">
+          <div class="card-header green">
+            <div class="card-title">📍 จุดบริการ <span class="required">*</span></div>
+          </div>
+          <div class="card-body">
+            <div class="segmented-group" id="groupServicePoint">
+              <div class="segmented-btn active" data-val="ER" onclick="selectSegmented('groupServicePoint', this)">ER</div>
+              <div class="segmented-btn" data-val="OPD" onclick="selectSegmented('groupServicePoint', this)">OPD</div>
+              <div class="segmented-btn" data-val="LR" onclick="selectSegmented('groupServicePoint', this)">LR (ห้องคลอด)</div>
+              <div class="segmented-btn" data-val="ทันตกรรม" onclick="selectSegmented('groupServicePoint', this)">ทันตกรรม</div>
+              <div class="segmented-btn" data-val="อื่นๆ" onclick="selectSegmented('groupServicePoint', this)">อื่นๆ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- หมายเหตุ / การดูแลเบื้องต้น -->
+        <div class="card">
+          <div class="card-header green">
+            <div class="card-title">💬 หมายเหตุ / การดูแลเบื้องต้น</div>
+          </div>
+          <div class="card-body">
+            <textarea id="patientNote" rows="3" placeholder="หมายเหตุเพิ่มเติม เช่น ให้ออกซิเจน Cannula 3 LPM, ให้ IV Fluid, ทำแผลกดห้ามเลือด..."></textarea>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-big-action" id="btnSubmitForm">
+          <span>💾</span> บันทึก Triage
+        </button>
+
+      </form>
+    </section>
+
+    <!-- ==================== VIEW 3: LIST (รายการ Triage) ==================== -->
+    <section id="viewList" class="view-section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 รายการ Triage</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="segmented-btn" style="flex: none; padding: 6px 12px; background: #047857; color: white;" onclick="exportToExcel()">📊 ส่งออก Excel</button>
+            <button class="segmented-btn" style="flex: none; padding: 6px 12px; background: #0284c7; color: white;" onclick="exportToPdf()">📄 ส่งออก PDF</button>
+            <button class="segmented-btn active" style="flex: none; padding: 6px 14px;" onclick="switchView('form')">+ เพิ่ม</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding-bottom: 8px;">
+          <!-- Filter Controls -->
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr 2fr auto; gap: 8px; margin-bottom: 12px;">
+            <input type="date" id="filterDate" onchange="filterPatientsList()">
+            <select id="filterLevel" onchange="filterPatientsList()">
+              <option value="all">ทุก Level</option>
+              <option value="1">Level 1 (Resuscitation)</option>
+              <option value="2">Level 2 (Emergency)</option>
+              <option value="3">Level 3 (Urgency)</option>
+              <option value="4">Level 4 (Semi Urgency)</option>
+              <option value="5">Level 5 (Non Urgency)</option>
+            </select>
+            <input type="text" id="filterSearch" placeholder="ค้นหาชื่อ / HN / CID..." oninput="filterPatientsList()">
+            <button class="btn-sound" onclick="filterPatientsList()" style="border-radius: 8px; height: 42px;">🔍 ค้นหา</button>
+          </div>
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+            พบ <strong id="listFoundCount">0</strong> รายการ
+          </div>
+        </div>
+      </div>
+
+      <!-- Container รายการการ์ดผู้ป่วย -->
+      <div id="patientListContainer">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: REPORT (รายงานประจำเดือน) ==================== -->
+    <section id="viewReport" class="view-section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 รายงานประจำเดือน</div>
+          <div style="display: flex; gap: 8px;">
+            <select id="reportMonth" style="width: auto; padding: 6px 12px;">
+              <option value="11">พ.ย.</option>
+              <option value="12">ธ.ค.</option>
+              <option value="1">ม.ค.</option>
+            </select>
+            <input type="number" id="reportYear" value="2569" style="width: 80px; padding: 6px 10px;">
+            <button class="btn-sound" onclick="renderMonthlyReport()" style="border-radius: 8px;">🔍</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 id="reportTitle" style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">พ.ย. 2569 – รวมทั้งหมด 0 ราย</h3>
+          
+          <!-- Level Breakdown Progress Bars -->
+          <div id="reportLevelBars">
+            <!-- Dynamic Render -->
+          </div>
+        </div>
+      </div>
+
+      <!-- จำแนกตามจุดบริการ -->
+      <div class="card">
+        <div class="card-header green">
+          <div class="card-title">📍 จำแนกตามจุดบริการ</div>
+        </div>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>จุดบริการ</th>
+                <th>จำนวน</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody id="reportServiceTable">
+              <!-- Dynamic Render -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- รายวัน ปฏิทิน Calendar Grid -->
+      <div class="card">
+        <div class="card-header green">
+          <div class="card-title">📈 สถิติรายวัน (Calendar Heatmap)</div>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 12px;" id="calendarGrid">
+            <!-- Render Days -->
+          </div>
+          <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 10px;">
+            ตัวเลขในช่องคือจำนวน Triage / วัน
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+        <button class="btn-big-action" onclick="exportToExcel()" style="background: #047857; margin-bottom: 0;">
+          <span>📊</span> ส่งออก Excel (.xlsx)
+        </button>
+        <button class="btn-big-action" onclick="exportToPdf()" style="background: #1b5e20; margin-bottom: 0;">
+          <span>🖨️</span> พิมพ์ / ส่งออก PDF
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchView('dashboard')">
+      <span class="nav-icon">⏱️</span>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="switchView('form')">
+      <span class="nav-icon" style="color: var(--primary-green); font-size: 22px;">✚</span>
+      <span>บันทึก Triage</span>
+    </div>
+    <div class="nav-item" onclick="switchView('list')">
+      <span class="nav-icon">📋</span>
+      <span>รายการ</span>
+    </div>
+    <div class="nav-item" onclick="switchView('report')">
+      <span class="nav-icon">📊</span>
+      <span>รายงาน</span>
+    </div>
+  </nav>
+
+  <!-- Floating Quick Guide Button -->
+  <button class="btn-quick-guide" onclick="openQuickGuideModal()">
+    <span>📖</span> คู่มือ Triage ด่วน
+  </button>
+
+  <!-- Modal: คู่มือเกณฑ์ MOPH ED Triage 5 ระดับ + Under/Over-Triage + Re-Triage Protocol (4 Tabs) -->
+  <div class="modal-overlay" id="modalQuickGuide">
+    <div class="modal-box" style="max-width: 780px;">
+      <div class="modal-header">
+        <div class="modal-title">📖 คู่มือมาตรฐาน MOPH ED Triage 5 ระดับ & ระบบควบคุมคุณภาพ</div>
+        <button class="btn-close-modal" onclick="closeQuickGuideModal()">✕</button>
+      </div>
+      <div style="background: #f8fafc; border-bottom: 1px solid var(--border-color); padding: 8px 16px; display: flex; gap: 8px; overflow-x: auto;">
+        <button class="segmented-btn active" id="tabGuideBtn0" onclick="switchGuideTab(0)" style="flex: none; font-size: 13px; padding: 6px 14px;">🎯 1. เกณฑ์ 5 ระดับ</button>
+        <button class="segmented-btn" id="tabGuideBtn1" onclick="switchGuideTab(1)" style="flex: none; font-size: 13px; padding: 6px 14px;">⚠️ 2. Under/Over-Triage</button>
+        <button class="segmented-btn" id="tabGuideBtn2" onclick="switchGuideTab(2)" style="flex: none; font-size: 13px; padding: 6px 14px;">🔄 3. รอบเวลา Re-Triage</button>
+        <button class="segmented-btn" id="tabGuideBtn3" onclick="switchGuideTab(3)" style="flex: none; font-size: 13px; padding: 6px 14px;">📦 4. Resource Matrix</button>
+      </div>
+      
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; max-height: 70vh; overflow-y: auto;">
+        
+        <!-- Tab 0: เกณฑ์ 5 ระดับ -->
+        <div id="guideTab0" class="guide-tab-pane">
+          <div style="margin-bottom: 14px;">
+            <input type="text" id="guideSearchInput" placeholder="🔍 ค้นหาอาการหรือโรค เช่น เจ็บหน้าอก, สโตรก, ปวดท้อง, หายใจเหนื่อย..." oninput="filterGuideSymptoms()" style="width: 100%; padding: 8px 12px; font-size: 13px;">
+          </div>
+
+          <div class="guide-item" data-keywords="resuscitation cardiac arrest respiratory arrest shock gcs spo2 ช่วยทันที วิกฤต หยุดหายใจ" style="border-left: 4px solid var(--color-lvl1); background: #fef2f2; border-radius: 0 8px 8px 0; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h4 style="color: var(--color-lvl1); font-size: 15px; margin: 0;">🔴 Level 1 : Resuscitation (ภาวะวิกฤต)</h4>
+              <span style="background: var(--color-lvl1); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Immediate (ทันที 0 นาที)</span>
+            </div>
+            <p><strong>ภาวะ:</strong> คุกคามต่อชีวิต ต้องได้รับการกู้ชีพหรือดูแลทันที หากช้าผู้ป่วยจะเสียชีวิต</p>
+            <p><strong>ตัวอย่างอาการ:</strong> Cardiac Arrest, Respiratory Arrest, Anaphylactic Shock, Severe Respiratory Distress (SpO2 &lt; 90%), GCS ≤ 8, ชักต่อเนื่อง, แผลบาดเจ็บรุนแรงเลือดพุ่ง</p>
+            <div style="background: white; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-weight: 500; color: #991b1b; font-size: 12px;">
+              📝 จำง่าย: <strong>“หยุดหายใจ หัวใจหยุดเต้น ช่วยทันที”</strong> | 🔄 รอบ Re-Triage: <strong>เฝ้าระวังต่อเนื่อง (Continuous)</strong>
+            </div>
+          </div>
+
+          <div class="guide-item" data-keywords="emergency mi chest pain stroke altered mental pain 7 sepsis ฉุกเฉิน เสี่ยงวิกฤต เจ็บหน้าอก แน่นหน้าอก อัมพฤกษ์ ปากเบี้ยว" style="border-left: 4px solid var(--color-lvl2); background: #fff1f2; border-radius: 0 8px 8px 0; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h4 style="color: var(--color-lvl2); font-size: 15px; margin: 0;">🩷 Level 2 : Emergency (ภาวะฉุกเฉิน)</h4>
+              <span style="background: var(--color-lvl2); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">ภายใน 10-15 นาที</span>
+            </div>
+            <p><strong>ภาวะ:</strong> มีความเสี่ยงสูงที่จะทรุดลงอย่างรวดเร็วเป็น Level 1 หากไม่ได้รับการรักษาทันเวลา</p>
+            <p><strong>ตัวอย่างอาการ:</strong> Chest pain สงสัย STEMI/NSTEMI, Acute Stroke (Fast track &lt; 4.5 ชม.), Altered mental status (GCS 9-12), Severe Sepsis (SIRS ≥ 2), Severe pain (Pain score ≥ 7), สับสนเฉียบพลัน, ซึม</p>
+            <div style="background: white; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-weight: 500; color: #9f1239; font-size: 12px;">
+              📝 จำง่าย: <strong>“ยังไม่วิกฤต แต่เสี่ยงวิกฤต”</strong> | 🔄 รอบ Re-Triage: <strong>ทุก 15 นาที</strong>
+            </div>
+          </div>
+
+          <div class="guide-item" data-keywords="urgent urgency abdominal pain trauma asthma fracture stable เลือดออก ปวดท้อง หอบ เร่งด่วน" style="border-left: 4px solid var(--color-lvl3); background: #fffbeb; border-radius: 0 8px 8px 0; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h4 style="color: var(--color-lvl3); font-size: 15px; margin: 0;">🟡 Level 3 : Urgent (ภาวะเร่งด่วน)</h4>
+              <span style="background: var(--color-lvl3); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">ภายใน 30 นาที</span>
+            </div>
+            <p><strong>ภาวะ:</strong> สัญญาณชีพคงที่ (Stable) แต่ต้องใช้ทรัพยากรตั้งแต่ 2 อย่างขึ้นไปในการวินิจฉัย/รักษา</p>
+            <p><strong>ตัวอย่างอาการ:</strong> ปวดท้องเฉียบพลัน (Acute abdomen), Moderate trauma สงสัยกระดูกหัก, หอบหืดกำเริบปานกลาง, เลือดออกทางเดินอาหารที่ Vital signs คงที่</p>
+            <div style="background: white; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-weight: 500; color: #92400e; font-size: 12px;">
+              📝 จำง่าย: <strong>“Stable แต่ต้องตรวจหลายอย่าง (Resource ≥ 2)”</strong> | 🔄 รอบ Re-Triage: <strong>ทุก 30 นาที</strong>
+            </div>
+          </div>
+
+          <div class="guide-item" data-keywords="semi urgent minor injury laceration wound แผล กึ่งเร่งด่วน เย็บแผล ปวดเล็กน้อย" style="border-left: 4px solid var(--color-lvl4); background: #f0fdf4; border-radius: 0 8px 8px 0; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h4 style="color: var(--color-lvl4); font-size: 15px; margin: 0;">🟢 Level 4 : Semi-Urgent (ภาวะกึ่งเร่งด่วน)</h4>
+              <span style="background: var(--color-lvl4); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">ภายใน 60 นาที</span>
+            </div>
+            <p><strong>ภาวะ:</strong> อาการไม่รุนแรง ใช้ทรัพยากรในการรักษาเพียง 1 อย่าง</p>
+            <p><strong>ตัวอย่างอาการ:</strong> บาดแผลฉีกขาดตื้นๆ ต้องเย็บ, ข้อเท้าแพลง (X-ray อย่างเดียว), ปัสสาวะแสบขัด (ตรวจปัสสาวะอย่างเดียว)</p>
+            <div style="background: white; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-weight: 500; color: #166534; font-size: 12px;">
+              📝 จำง่าย: <strong>“ไม่ฉุกเฉินมาก ใช้ Resource 1 อย่าง”</strong> | 🔄 รอบ Re-Triage: <strong>ทุก 60 นาที</strong>
+            </div>
+          </div>
+
+          <div class="guide-item" data-keywords="non urgent common cold chronic rash refill ไม่เร่งด่วน หวัด รับยา ผื่น" style="border-left: 4px solid var(--color-lvl5); background: #f8fafc; border-radius: 0 8px 8px 0; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <h4 style="color: var(--color-lvl5); font-size: 15px; margin: 0;">🤍 Level 5 : Non-Urgent (ภาวะไม่เร่งด่วน)</h4>
+              <span style="background: var(--color-lvl5); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">ภายใน 120 นาที</span>
+            </div>
+            <p><strong>ภาวะ:</strong> อาการเล็กน้อย ไม่จำเป็นต้องใช้ทรัพยากรเพิ่มเติม สามารถรอพบแพทย์หรือส่งต่อไปคลินิกนอกเวลาได้</p>
+            <p><strong>ตัวอย่างอาการ:</strong> ไข้หวัดทั่วไป, ขอรับยาโรคประจำตัวเดิม, ผื่นคันเรื้อรังไม่มีไข้, ตรวจสุขภาพ</p>
+            <div style="background: white; border-radius: 6px; padding: 6px 10px; margin-top: 6px; font-weight: 500; color: #475569; font-size: 12px;">
+              📝 จำง่าย: <strong>“ตรวจ ให้คำแนะนำ กลับบ้านได้ (Resource 0)”</strong> | 🔄 รอบ Re-Triage: <strong>ทุก 120 นาที</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: Under-Triage & Over-Triage -->
+        <div id="guideTab1" class="guide-tab-pane" style="display: none;">
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+            <h4 style="color: #1e40af; font-size: 14px; margin-bottom: 4px;">📊 มาตรฐานการควบคุมคุณภาพ Triage สากล</h4>
+            <p style="color: #1e3a8a; font-size: 12px;">ระบบคัดกรองที่มีประสิทธิภาพต้องรักษาสมดุลระหว่างความปลอดภัยของผู้ป่วย (ลด Under-Triage) และการบริหารจัดการทรัพยากรห้องฉุกเฉิน (ควบคุม Over-Triage ให้อยู่ในเกณฑ์พอเหมาะ)</p>
+          </div>
+
+          <div style="border-left: 4px solid #dc2626; background: #fef2f2; border-radius: 0 8px 8px 0; padding: 14px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h4 style="color: #b91c1c; font-size: 15px; margin: 0;">⚠️ Under-Triage (ประเมินต่ำกว่าความเป็นจริง)</h4>
+              <span style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;">เกณฑ์เป้าหมาย &lt; 5%</span>
+            </div>
+            <p><strong>นิยาม:</strong> การจัดระดับความรุนแรงของผู้ป่วยต่ำกว่าที่ควรจะเป็น เช่น ผู้ป่วยเป็น Level 1 หรือ 2 แต่ถูกจัดเป็น Level 3 หรือ 4</p>
+            <p><strong>ความเสี่ยง:</strong> <span style="color: #dc2626; font-weight: 600;">อันตรายสูงสุดต่อชีวิตผู้ป่วย!</span> ทำให้ได้รับการรักษาล่าช้า เกิดภาวะแทรกซ้อน หรือเสียชีวิตระหว่างรอตรวจ</p>
+            <p><strong>สาเหตุที่พบบ่อย:</strong> ไม่ได้วัดหรือประเมิน Vital signs ซ้ำ, ดูแต่อาการภายนอก, ละเลยสัญญาณเตือนของ Sepsis หรือ Silent Hypoxemia</p>
+            <p><strong>แนวทางแก้ไข:</strong> Re-Triage ทันทีเมื่อสัญญาณชีพเปลี่ยน, ประเมิน Primary Survey ครบถ้วน, ใช้ระบบเตือนอัตโนมัติ</p>
+          </div>
+
+          <div style="border-left: 4px solid #d97706; background: #fffbeb; border-radius: 0 8px 8px 0; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h4 style="color: #b45309; font-size: 15px; margin: 0;">🔽 Over-Triage (ประเมินสูงกว่าความเป็นจริง)</h4>
+              <span style="background: #d97706; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;">เกณฑ์ยอมรับได้ 25% - 50%</span>
+            </div>
+            <p><strong>นิยาม:</strong> การจัดระดับความรุนแรงสูงกว่าความเป็นจริง เช่น ผู้ป่วยเป็น Level 4 แต่จัดเป็น Level 2</p>
+            <p><strong>ผลกระทบ:</strong> ทำให้แพทย์และพยาบาลภาระงานล้น (ER Overcrowding), สิ้นเปลืองทรัพยากร, แต่ถือเป็น Safety Margin ที่ยอมรับได้เพื่อป้องกันไม่ให้ผู้ป่วยหลุดรอด</p>
+            <p><strong>แนวทางแก้ไข:</strong> ทบทวนเกณฑ์ Resource Matrix, ซักประวัติและกลไกการบาดเจ็บให้ชัดเจน</p>
+          </div>
+        </div>
+
+        <!-- Tab 2: Re-Triage Protocol -->
+        <div id="guideTab2" class="guide-tab-pane" style="display: none;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+            <h4 style="color: #166534; font-size: 14px; margin-bottom: 4px;">⏱️ รอบเวลาการประเมินซ้ำ (Re-Triage Interval ตาม MOPH)</h4>
+            <p style="color: #14532d; font-size: 12px;">ผู้ป่วยที่ยังรอตรวจ ต้องได้รับการประเมินซ้ำตามรอบเวลามาตรฐาน หรือทันทีที่มีการเปลี่ยนแปลงของอาการ</p>
+          </div>
+
+          <table class="custom-table" style="font-size: 13px;">
+            <thead>
+              <tr>
+                <th>ระดับ Triage</th>
+                <th>รอบเวลา Re-Triage</th>
+                <th>สิ่งที่ต้องประเมินซ้ำ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color: var(--color-lvl1);">🔴 Level 1 (Resuscitation)</strong></td>
+                <td><strong>เฝ้าระวังต่อเนื่อง (Continuous)</strong></td>
+                <td>Vital Signs Monitor, EKG, SpO2, Airway, GCS</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--color-lvl2);">🩷 Level 2 (Emergency)</strong></td>
+                <td><strong>ทุก 15 นาที</strong></td>
+                <td>Pain Score, Vital signs, Neuro signs, อาการเจ็บหน้าอก</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--color-lvl3);">🟡 Level 3 (Urgent)</strong></td>
+                <td><strong>ทุก 30 นาที</strong></td>
+                <td>Vital signs, Pain score, อาการปวดท้อง, ระดับความรู้สึกตัว</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--color-lvl4);">🟢 Level 4 (Semi-Urgent)</strong></td>
+                <td><strong>ทุก 60 นาที</strong></td>
+                <td>ซักถามอาการซ้ำ, ตรวจดูแผล, ดูความกระวนกระวาย</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--color-lvl5);">🤍 Level 5 (Non-Urgent)</strong></td>
+                <td><strong>ทุก 120 นาที</strong></td>
+                <td>ประเมินความสุขสบาย และอาการทั่วไป</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size: 12px; color: #64748b; margin-top: 10px;">
+            * หากผู้ป่วยบ่นว่าปวดมากขึ้น หายใจเหนื่อย ซึมลง หรือหน้าซีดเหงื่อแตก ให้ทำการ <strong>Re-Triage ทันทีโดยไม่ต้องรอรอบเวลา</strong>
+          </p>
+        </div>
+
+        <!-- Tab 3: Resource Matrix -->
+        <div id="guideTab3" class="guide-tab-pane" style="display: none;">
+          <h4 style="font-size: 14px; color: #0f172a; margin-bottom: 10px;">📦 ทรัพยากร (Resources) ตามเกณฑ์ ESI / MOPH</h4>
+          <p style="font-size: 12px; color: #475569; margin-bottom: 12px;">ใช้ช่วยจำแนกผู้ป่วยที่มี Vital Signs คงที่ ระหว่าง Level 3, 4 และ 5:</p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+              <h5 style="color: #15803d; font-size: 13px; margin-bottom: 6px;">✅ นับเป็น Resources</h5>
+              <ul style="padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.8;">
+                <li>ตรวจ Lab (เจาะเลือด, เพาะเชื้อ)</li>
+                <li>ตรวจรังสี (X-ray, CT Scan, Ultrasound)</li>
+                <li>ให้ยาทางหลอดเลือดดำ (IV / IM Medication)</li>
+                <li>ให้สารน้ำทางเส้นเลือด (IV Hydration)</li>
+                <li>หัตถการเฉพาะทาง (เย็บแผล, ใส่ Foley, ใส่ NG Tube)</li>
+                <li>ปรึกษาแพทย์เฉพาะทาง (Consultation)</li>
+              </ul>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+              <h5 style="color: #dc2626; font-size: 13px; margin-bottom: 6px;">❌ ไม่นับเป็น Resources</h5>
+              <ul style="padding-left: 18px; font-size: 12px; color: #334155; line-height: 1.8;">
+                <li>การซักประวัติและตรวจร่างกาย</li>
+                <li>การให้ยาทางปาก (PO Meds) หรือจ่ายยากลับบ้าน</li>
+                <li>การทำแผลธรรมดา (Simple dressing)</li>
+                <li>การให้คำแนะนำสุขภาพ (Discharge education)</li>
+                <li>การฉีดวัคซีนบาดทะยัก (Tetanus toxoid)</li>
+                <li>การตรวจปัสสาวะแถบตรวจ (Urine dipstick)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Re-Triage Evaluation Modal -->
+  <div class="modal-overlay" id="modalReTriage">
+    <div class="modal-box" style="max-width: 640px;">
+      <div class="modal-header" style="background: #047857;">
+        <div class="modal-title">🔄 ประเมินซ้ำ (Re-Triage) & ตรวจสอบคุณภาพ</div>
+        <button class="btn-close-modal" onclick="closeReTriageModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- ข้อมูลผู้ป่วยปัจจุบัน -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h4 id="retriagePatientName" style="font-size: 15px; font-weight: 600; color: #0f172a;">ชื่อผู้ป่วย</h4>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              <span id="retriagePatientHN">HN: -</span> | มาถึง: <span id="retriageVisitTime">-</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: var(--text-muted);">ระดับแรกรับ</div>
+            <div id="retriageOriginalLevelBadge" class="triage-badge lvl5">Level 5</div>
+          </div>
+        </div>
+
+        <!-- กล่องคำนวณ Under/Over Triage สด -->
+        <div id="retriageQualityBanner" style="border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; background: #f0fdf4; border: 1px solid #bbf7d0;">
+          <span style="font-size: 24px;" id="retriageQualityIcon">✅</span>
+          <div>
+            <div id="retriageQualityTitle" style="font-weight: 600; font-size: 13px; color: #166534;">Appropriate Triage (เหมาะสมคงที่)</div>
+            <div id="retriageQualityDesc" style="font-size: 12px; color: #14532d;">ระดับความรุนแรงยังสอดคล้องกับเกณฑ์แรกรับ</div>
+          </div>
+        </div>
+
+        <!-- เลือกระดับใหม่จากการ Re-Triage -->
+        <div class="form-group">
+          <label>ระดับ Triage จากการประเมินซ้ำ <span class="required">*</span></label>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;" id="retriageLevelSelector">
+            <button type="button" class="segmented-btn" onclick="setReTriageSelectedLevel(1)" id="btnReLvl1" style="border-color: var(--color-lvl1); color: var(--color-lvl1);">🔴 L1</button>
+            <button type="button" class="segmented-btn" onclick="setReTriageSelectedLevel(2)" id="btnReLvl2" style="border-color: var(--color-lvl2); color: var(--color-lvl2);">🩷 L2</button>
+            <button type="button" class="segmented-btn" onclick="setReTriageSelectedLevel(3)" id="btnReLvl3" style="border-color: var(--color-lvl3); color: var(--color-lvl3);">🟡 L3</button>
+            <button type="button" class="segmented-btn" onclick="setReTriageSelectedLevel(4)" id="btnReLvl4" style="border-color: var(--color-lvl4); color: var(--color-lvl4);">🟢 L4</button>
+            <button type="button" class="segmented-btn" onclick="setReTriageSelectedLevel(5)" id="btnReLvl5" style="border-color: var(--color-lvl5); color: var(--color-lvl5);">🤍 L5</button>
+          </div>
+        </div>
+
+        <!-- Vital signs ล่าสุดขณะ Re-Triage -->
+        <div class="card" style="margin-bottom: 14px; border: 1px solid #cbd5e1;">
+          <div class="card-header" style="padding: 8px 14px; background: #f8fafc; font-size: 13px; font-weight: 600;">
+            📊 สัญญาณชีพขณะประเมินซ้ำ (Re-Triage Vitals)
+          </div>
+          <div class="card-body" style="padding: 12px;">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+              <div>
+                <label>BP (mmHg)</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <input type="number" id="reSBP" placeholder="120" style="padding: 6px;">
+                  <span>/</span>
+                  <input type="number" id="reDBP" placeholder="80" style="padding: 6px;">
+                </div>
+              </div>
+              <div>
+                <label>PR (/min)</label>
+                <input type="number" id="rePR" placeholder="80" style="padding: 6px;">
+              </div>
+              <div>
+                <label>RR (/min)</label>
+                <input type="number" id="reRR" placeholder="18" style="padding: 6px;">
+              </div>
+              <div>
+                <label>SpO2 (%)</label>
+                <input type="number" id="reO2" placeholder="98" style="padding: 6px;">
+              </div>
+              <div>
+                <label>Temp (°C)</label>
+                <input type="number" step="0.1" id="reTemp" placeholder="36.5" style="padding: 6px;">
+              </div>
+              <div>
+                <label>Pain (0-10)</label>
+                <input type="number" min="0" max="10" id="rePain" placeholder="0" style="padding: 6px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- เหตุผลการประเมินซ้ำ -->
+        <div class="form-group">
+          <label>เหตุผลในการประเมินซ้ำ / ความเปลี่ยนแปลงของอาการ <span class="required">*</span></label>
+          <select id="reReasonSelect" onchange="onReReasonChange()" style="margin-bottom: 6px;">
+            <option value="ครบกำหนดรอบเวลาเฝ้าระวัง">ครบกำหนดรอบเวลาเฝ้าระวัง (Routine interval check)</option>
+            <option value="ผู้ป่วยบ่นว่าปวดมากขึ้น / อาการทรุดลง">ผู้ป่วยบ่นว่าปวดมากขึ้น / อาการทรุดลง</option>
+            <option value="สัญญาณชีพเปลี่ยน (Vital signs unstable)">สัญญาณชีพเปลี่ยน (Vital signs unstable)</option>
+            <option value="ผลการตรวจทางห้องปฏิบัติการ / X-ray บ่งชี้ความรุนแรง">ผลตรวจ Lab / X-ray บ่งชี้ความรุนแรง</option>
+            <option value="อาการทุเลาลงหลังได้รับการรักษาเบื้องต้น">อาการทุเลาลงหลังได้รับการรักษาเบื้องต้น</option>
+            <option value="อื่นๆ">อื่นๆ (ระบุเพิ่มเติม)</option>
+          </select>
+          <textarea id="reReasonText" rows="2" placeholder="บันทึกรายละเอียดเพิ่มเติม เช่น SpO2 ลดลงเหลือ 91%, ผู้ป่วยเริ่มมีอาการเหงื่อแตกตัวเย็น..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>พยาบาลผู้ประเมินซ้ำ</label>
+          <input type="text" id="reStaffName" value="พว.นันทวัน อิสระเสนีย์ พยาบาลวิชาชีพปฏิบัติการ">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button type="button" class="segmented-btn" onclick="closeReTriageModal()" style="flex: 1; padding: 10px;">ยกเลิก</button>
+          <button type="button" class="btn-big-action" onclick="submitReTriageAction()" style="flex: 2; margin: 0; padding: 10px; background: #047857;">
+            <span>💾</span> บันทึกผลการ Re-Triage
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: การตั้งค่าระบบ (LINE Notify & Staff Name) -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ ตั้งค่าระบบ (LINE Notify & ข้อมูล รพ.)</div>
+        <button class="btn-close-modal" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>ชื่อโรงพยาบาล</label>
+          <input type="text" id="settingHospital" value="โรงพยาบาลหลวงพ่อเปิ่น">
+        </div>
+        <div class="form-group">
+          <label>ชื่อเจ้าหน้าที่คัดกรอง (เวรปัจจุบัน)</label>
+          <input type="text" id="settingStaff" value="พว.นันทวัน อิสระเสนีย์ พยาบาลวิชาชีพ">
+        </div>
+        <div class="form-group" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px;">
+          <label style="color: #166534; font-weight: 600;">💬 LINE OpenChat: Triage LPH (เชื่อมต่อแล้ว)</label>
+          <div style="font-size: 12px; color: #14532d; margin-bottom: 6px;">
+            ลิงก์เข้าร่วมห้องคัดกรองฉุกเฉิน รพ.หลวงพ่อเปิ่น สำหรับทีมแพทย์/พยาบาล:
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" readonly value="https://line.me/ti/g2/V1UNTdetwPj4fS9-3Z3mzS3r-pzF8klqZLmyaQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" style="font-size: 11px; font-family: monospace; background: white;" onclick="this.select()">
+            <a href="https://line.me/ti/g2/V1UNTdetwPj4fS9-3Z3mzS3r-pzF8klqZLmyaQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener noreferrer" class="btn-sound" style="background: #06C755; text-decoration: none; padding: 8px 12px; font-size: 12px; white-space: nowrap;">
+              เปิดห้องแชต
+            </a>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>LINE Notify Token</label>
+          <input type="text" id="settingLineToken" placeholder="วาง LINE Notify Token ที่ได้จาก notify-bot.line.me">
+          <small style="color: #64748b; display: block; margin-top: 4px;">
+            เมื่อมีเคสใหม่หรือ Under-Triage ระบบจะส่งแจ้งเตือนเข้ากลุ่ม LINE อัตโนมัติทันที
+          </small>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn-sound" onclick="testLineNotifyAction()" style="flex: 1; padding: 10px;">
+            📲 ทดสอบส่ง LINE
+          </button>
+          <button type="button" class="btn-big-action" onclick="saveSettingsAction()" style="flex: 1; margin: 0; padding: 10px;">
+            💾 บันทึกการตั้งค่า
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div class="toast" id="systemToast">
+    <span id="toastIcon">ℹ️</span>
+    <span id="toastMessage">แจ้งเตือน</span>
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT LOGIC - Single File Implementation for Google Apps Script
+       ========================================================================== -->
+  <script>
+    // State ตัวแปรส่วนกลาง (โรงพยาบาลหลวงพ่อเปิ่น)
+    let patients = [];
+    let audioAlertEnabled = true;
+    let selectedTriageLevel = 5;
+    let currentStaff = "พว.นันทวัน อิสระเสนีย์ พยาบาลวิชาชีพ";
+    let currentHospital = "โรงพยาบาลหลวงพ่อเปิ่น";
+    let lineNotifyToken = "";
+    let lineOpenChatUrl = "https://line.me/ti/g2/V1UNTdetwPj4fS9-3Z3mzS3r-pzF8klqZLmyaQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default";
+    let lineOpenChatName = "Triage LPH";
+
+    // ข้อมูลเริ่มต้นจำลองเหมือนหน้าจอ รพ.พุทธมณฑล
+    const INITIAL_SAMPLE_PATIENTS = [
+      {
+        id: "TRG-20261103-0834",
+        timestamp: "2026-11-03 08:34:00",
+        cid: "1739900123456",
+        hn: "0006387",
+        prefix: "น.ส.",
+        fullName: "ระวีวัฒน์ แดงช้อย",
+        age: 32,
+        visitDateTime: "03/11/2026 08:34",
+        chiefComplaint: "ทดสอบระบบ",
+        airway: "พูดได้ปกติ",
+        rr: 18,
+        o2Sat: 98,
+        lungSound: "Clear",
+        pr: 80,
+        temp: 36.6,
+        bp: "120/80",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 0,
+        triageLevel: 2,
+        triageLevelName: "Emergency",
+        servicePoint: "ER",
+        staffName: "น.ส.ระวีวัฒน์ แดงช้อย",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0832",
+        timestamp: "2026-11-03 08:32:00",
+        cid: "1739900789012",
+        hn: "0254400",
+        prefix: "น.ส.",
+        fullName: "ศศิธร สุขทอง",
+        age: 45,
+        visitDateTime: "03/11/2026 08:32",
+        chiefComplaint: "06.00น. วันที่ 3 พ.ย. 69 มีอาการปวดท้องมาก ปวดลักษณะบิดๆ คลื่นไส้ เวียนศีรษะ ไม่มีท...",
+        airway: "พูดได้ปกติ",
+        rr: 20,
+        o2Sat: 97,
+        lungSound: "Clear",
+        pr: 86,
+        temp: 37.0,
+        bp: "135/85",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 1,
+        painScore: 8,
+        triageLevel: 2,
+        triageLevelName: "Emergency",
+        servicePoint: "ER",
+        staffName: "น.ส.ระวีวัฒน์ แดงช้อย",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0822",
+        timestamp: "2026-11-03 08:22:00",
+        cid: "1739900345678",
+        hn: "0030275",
+        prefix: "นาย",
+        fullName: "รณชัย สวัสดิ์มี",
+        age: 50,
+        visitDateTime: "03/11/2026 08:22",
+        chiefComplaint: "23.15น. วันที่ 23 พ.ย.69 ถ่ายอุจจาระมีเลือดสดๆปน 1ครั้ง เบ่งอุจจาระแรง ไม่มี...",
+        airway: "พูดได้ปกติ",
+        rr: 18,
+        o2Sat: 99,
+        lungSound: "Clear",
+        pr: 76,
+        temp: 36.4,
+        bp: "128/78",
+        crt: "<= 2 วินาที",
+        bleeding: "เลือดปนอุจจาระ",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 2,
+        triageLevel: 4,
+        triageLevelName: "Semi Urgency",
+        servicePoint: "OPD",
+        staffName: "น.ส.ระวีวัฒน์ แดงช้อย",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0631",
+        timestamp: "2026-11-03 06:31:00",
+        cid: "1739900567890",
+        hn: "0336279",
+        prefix: "นาง",
+        fullName: "เจ้า จินดาประภาพร",
+        age: 62,
+        visitDateTime: "03/11/2026 06:31",
+        chiefComplaint: "assault แผลถลอกบริเวณใบหน้า",
+        airway: "พูดได้ปกติ",
+        rr: 18,
+        o2Sat: 98,
+        lungSound: "Clear",
+        pr: 78,
+        temp: 36.5,
+        bp: "130/80",
+        crt: "<= 2 วินาที",
+        bleeding: "แผลถลอก",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 3,
+        triageLevel: 4,
+        triageLevelName: "Semi Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0203",
+        timestamp: "2026-11-03 02:03:00",
+        cid: "1739900987654",
+        hn: "0082579",
+        prefix: "นาย",
+        fullName: "ประจวบ พิศเพ็ง",
+        age: 58,
+        visitDateTime: "03/11/2026 02:03",
+        chiefComplaint: "จุกแน่นท้อง คลื่นไส้ อาเจียน 1 ครั้ง",
+        airway: "พูดได้ปกติ",
+        rr: 20,
+        o2Sat: 97,
+        lungSound: "Clear",
+        pr: 84,
+        temp: 36.8,
+        bp: "140/85",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 4,
+        triageLevel: 4,
+        triageLevelName: "Semi Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0151",
+        timestamp: "2026-11-03 01:51:00",
+        cid: "1739900112233",
+        hn: "0045612",
+        prefix: "นาย",
+        fullName: "วีรพงศ์ รอดงาม",
+        age: 41,
+        visitDateTime: "03/11/2026 01:51",
+        chiefComplaint: "ปวดข้อมือขวาจากอุบัติเหตุลื่นล้ม มีอาการบวม",
+        airway: "พูดได้ปกติ",
+        rr: 18,
+        o2Sat: 99,
+        lungSound: "Clear",
+        pr: 76,
+        temp: 36.5,
+        bp: "122/78",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 4,
+        triageLevel: 4,
+        triageLevelName: "Semi Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0034",
+        timestamp: "2026-11-03 00:34:00",
+        cid: "1739900445566",
+        hn: "0012398",
+        prefix: "นาง",
+        fullName: "ประหยัด จันทราภาส",
+        age: 69,
+        visitDateTime: "03/11/2026 00:34",
+        chiefComplaint: "ขอรับยาความดันต่อเนื่อง ยาหมด",
+        airway: "พูดได้ปกติ",
+        rr: 16,
+        o2Sat: 98,
+        lungSound: "Clear",
+        pr: 72,
+        temp: 36.4,
+        bp: "125/75",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 0,
+        triageLevel: 5,
+        triageLevelName: "Non Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0029",
+        timestamp: "2026-11-03 00:29:00",
+        cid: "1739900778899",
+        hn: "0023419",
+        prefix: "นาย",
+        fullName: "ธัญพิสิษฐ์ โพธิ์สูง",
+        age: 28,
+        visitDateTime: "03/11/2026 00:29",
+        chiefComplaint: "คันตา มีผื่นคันเล็กน้อยบริเวณแขน 2 วัน",
+        airway: "พูดได้ปกติ",
+        rr: 16,
+        o2Sat: 99,
+        lungSound: "Clear",
+        pr: 74,
+        temp: 36.6,
+        bp: "118/76",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 1,
+        triageLevel: 5,
+        triageLevelName: "Non Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      },
+      {
+        id: "TRG-20261103-0010",
+        timestamp: "2026-11-03 00:10:00",
+        cid: "1739900990011",
+        hn: "0098712",
+        prefix: "นาง",
+        fullName: "สมศรี มั่นคง",
+        age: 52,
+        visitDateTime: "03/11/2026 00:10",
+        chiefComplaint: "มีไข้ต่ำๆ ไอแห้งๆ 1 วัน",
+        airway: "พูดได้ปกติ",
+        rr: 18,
+        o2Sat: 98,
+        lungSound: "Clear",
+        pr: 80,
+        temp: 37.2,
+        bp: "120/80",
+        crt: "<= 2 วินาที",
+        bleeding: "ไม่มี",
+        gcs: 15,
+        avpu: "A",
+        sirsScore: 0,
+        painScore: 1,
+        triageLevel: 5,
+        triageLevelName: "Non Urgency",
+        servicePoint: "ER",
+        staffName: "น.ส.รัตนา พันประสิทธิ์",
+        status: "รอตรวจ"
+      }
+    ];
+
+    // เริ่มต้นระบบเมื่อโหลดหน้าเว็บ
+    window.addEventListener('DOMContentLoaded', () => {
+      initApp();
+    });
+
+    function initApp() {
+      // โหลดการตั้งค่าจาก localStorage
+      const savedHospital = localStorage.getItem('hospital_name');
+      const savedStaff = localStorage.getItem('staff_name');
+      const savedToken = localStorage.getItem('line_token');
+      const savedPatients = localStorage.getItem('triage_patients_list');
+
+      if (savedHospital) currentHospital = savedHospital;
+      if (savedStaff) currentStaff = savedStaff;
+      if (savedToken) lineNotifyToken = savedToken;
+
+      document.getElementById('appHospitalSub').innerText = currentHospital;
+      document.getElementById('staffDisplay').innerText = currentStaff;
+      document.getElementById('settingHospital').value = currentHospital;
+      document.getElementById('settingStaff').value = currentStaff;
+      document.getElementById('settingLineToken').value = lineNotifyToken;
+
+      // วันที่เวลาปัจจุบันในฟอร์ม
+      setDefaultVisitTime();
+
+      // โหลดข้อมูลผู้ป่วย
+      if (savedPatients) {
+        try {
+          patients = JSON.parse(savedPatients);
+        } catch(e) {
+          patients = [...INITIAL_SAMPLE_PATIENTS];
+        }
+      } else {
+        patients = [...INITIAL_SAMPLE_PATIENTS];
+        localStorage.setItem('triage_patients_list', JSON.stringify(patients));
+      }
+
+      // ตรวจสอบว่ากำลังรันบน Google Apps Script หรือไม่
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(gasPatients) {
+            if (gasPatients && gasPatients.length > 0) {
+              patients = gasPatients;
+            }
+            updateDashboard();
+            renderPatientsList();
+            renderMonthlyReport();
+          })
+          .getPatientsList();
+      } else {
+        updateDashboard();
+        renderPatientsList();
+        renderMonthlyReport();
+      }
+
+      // เริ่มระบบ Auto-refresh เช็คข้อมูลทุก 20 วินาที
+      setInterval(() => {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function(gasPatients) {
+              if (gasPatients && gasPatients.length > 0) {
+                // เช็คว่ามีเคสใหม่เพิ่มมาหรือไม่
+                if (gasPatients.length > patients.length) {
+                  playHospitalAlertSound(gasPatients[0].triageLevel);
+                  showToast("มีเคสผู้ป่วยใหม่เข้ามา!", "success");
+                }
+                patients = gasPatients;
+                updateDashboard();
+                renderPatientsList();
+              }
+            })
+            .getPatientsList();
+        }
+      }, 20000);
+    }
+
+    // ตั้งค่าวันเวลาปัจจุบัน
+    function setDefaultVisitTime() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('patientVisitTime').value = now.toISOString().slice(0, 16);
+    }
+
+    // สลับหน้าจอ (Tab Navigation)
+    function switchView(viewName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
+
+      const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+
+      if (viewName === 'dashboard') {
+        document.getElementById('viewDashboard').classList.add('active');
+        navItems[0].classList.add('active');
+        updateDashboard();
+      } else if (viewName === 'form') {
+        document.getElementById('viewForm').classList.add('active');
+        navItems[1].classList.add('active');
+        setDefaultVisitTime();
+      } else if (viewName === 'list') {
+        document.getElementById('viewList').classList.add('active');
+        navItems[2].classList.add('active');
+        renderPatientsList();
+      } else if (viewName === 'report') {
+        document.getElementById('viewReport').classList.add('active');
+        navItems[3].classList.add('active');
+        renderMonthlyReport();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ระบบประเมินเกณฑ์ MOPH ED Triage 5 ระดับ อัตโนมัติ
+    function evaluateTriageCriteria() {
+      const airway = getSegmentedValue('groupAirway');
+      const gcs = parseInt(document.getElementById('vitalsGCS').value, 10) || 15;
+      const o2 = parseInt(document.getElementById('vitalsO2').value, 10) || 98;
+      const sbp = parseInt(document.getElementById('vitalsSBP').value, 10) || 120;
+      const pr = parseInt(document.getElementById('vitalsPR').value, 10) || 80;
+      const rr = parseInt(document.getElementById('vitalsRR').value, 10) || 18;
+      const pain = parseInt(document.getElementById('sliderPain').value, 10) || 0;
+      const sirs = parseInt(document.getElementById('sliderSIRS').value, 10) || 0;
+      const complaint = (document.getElementById('patientComplaint').value || "").toLowerCase();
+
+      let recLevel = 5;
+      let recReason = "Vital signs ปกติ หรืออาการทั่วไปไม่เร่งด่วน";
+
+      // Level 1 : Resuscitation (วิกฤต)
+      // Cardiac arrest, respiratory arrest, GCS <= 8, Airway obstruction, SpO2 < 90%, SBP < 90 with shock
+      if (airway === 'มีสิ่งอุดกั้น' || gcs <= 8 || o2 < 90 || (sbp < 80 && pr > 120) || rr < 8 || rr > 35 ||
+          complaint.includes('หยุดหายใจ') || complaint.includes('หัวใจหยุดเต้น') || complaint.includes('cpr') || complaint.includes('cardiac arrest')) {
+        recLevel = 1;
+        recReason = "พบภาวะคุกคามชีวิต (GCS ≤ 8 / Airway มีสิ่งอุดกั้น / SpO2 < 90% / หายใจวิกฤต) ต้องช่วยทันที";
+      }
+      // Level 2 : Emergency (ฉุกเฉิน)
+      // Chest pain สงสัย MI, Stroke, Severe Sepsis (SIRS >= 2), Altered mental (GCS 9-12), Pain >= 7, SpO2 90-94%
+      else if (complaint.includes('เจ็บหน้าอก') || complaint.includes('แน่นหน้าอก') || complaint.includes('chest pain') || complaint.includes('mi') ||
+               complaint.includes('stroke') || complaint.includes('ปากเบี้ยว') || complaint.includes('แขนขาอ่อนแรง') ||
+               sirs >= 2 || pain >= 7 || (gcs >= 9 && gcs <= 12) || (o2 >= 90 && o2 <= 94) || sbp > 200) {
+        recLevel = 2;
+        recReason = "มีความเสี่ยงสูงที่จะทรุดลง (สงสัย MI / Stroke / Pain ≥ 7 / SIRS Positive / SpO2 ต่ำ)";
+      }
+      // Level 3 : Urgent (เร่งด่วน)
+      // Abdominal pain, Moderate trauma, Asthma, GI bleeding stable (ใช้ Resource 2 อย่างขึ้นไป)
+      else if (complaint.includes('ปวดท้อง') || complaint.includes('หอบ') || complaint.includes('asthma') || complaint.includes('เลือดออก') ||
+               complaint.includes('อุบัติเหตุ') || pain >= 4 || rr > 22 || pr > 100) {
+        recLevel = 3;
+        recReason = "อาการคงที่ แต่ต้องใช้ทรัพยากรหลายอย่าง (ตรวจ Lab, X-ray, IV Med, ปวดปานกลาง)";
+      }
+      // Level 4 : Semi-Urgent (กึ่งเร่งด่วน)
+      // แผลฉีกขาดเล็กน้อย, minor injury, ใช้ resource 1 อย่าง
+      else if (complaint.includes('แผล') || complaint.includes('เย็บ') || complaint.includes('ลื่นล้ม') || complaint.includes('ฟกช้ำ') || pain >= 1) {
+        recLevel = 4;
+        recReason = "อาการไม่รุนแรง ใช้ทรัพยากรตรวจ/รักษาเพียง 1 อย่าง (เช่น ทำแผล/X-ray จุดเดียว)";
+      } else {
+        recLevel = 5;
+        recReason = "อาการเล็กน้อย ไม่จำเป็นต้องใช้ทรัพยากรเพิ่มเติม (รับยา/ตรวจทั่วไป)";
+      }
+
+      autoRecommendedLevel = recLevel;
+
+      const levelNames = {
+        1: "🔴 Level 1 : Resuscitation (วิกฤต - รักษาทันที)",
+        2: "🩷 Level 2 : Emergency (ฉุกเฉิน - ≤ 10 นาที)",
+        3: "🟡 Level 3 : Urgent (เร่งด่วน - ≤ 30 นาที)",
+        4: "🟢 Level 4 : Semi Urgency (กึ่งเร่งด่วน - ≤ 60 นาที)",
+        5: "🤍 Level 5 : Non Urgency (ไม่เร่งด่วน - รอได้)"
+      };
+
+      document.getElementById('recLevelText').innerText = "แนะนำ: " + levelNames[recLevel];
+      document.getElementById('recReasonText').innerText = recReason;
+    }
+
+    // กดปุ่ม "ใช้ค่านี้"
+    function applyRecommendation() {
+      selectTriageLevel(autoRecommendedLevel);
+      showToast("นำระดับที่แนะนำไปใช้แล้ว: Level " + autoRecommendedLevel, "success");
+    }
+
+    // เลือกระดับ Triage
+    function selectTriageLevel(lvl) {
+      selectedTriageLevel = lvl;
+      document.querySelectorAll('.triage-level-btn').forEach((btn, idx) => {
+        btn.classList.remove('active');
+        if (idx + 1 === lvl) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Segmented Button Controller
+    function selectSegmented(groupId, element) {
+      const parent = document.getElementById(groupId);
+      parent.querySelectorAll('.segmented-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      evaluateTriageCriteria();
+    }
+
+    function getSegmentedValue(groupId) {
+      const activeBtn = document.querySelector('#' + groupId + ' .segmented-btn.active');
+      return activeBtn ? activeBtn.getAttribute('data-val') : '';
+    }
+
+    // Sliders Listener
+    function updateSlider(type, val) {
+      document.getElementById('val' + type).innerText = val;
+      evaluateTriageCriteria();
+    }
+
+    // สุ่มเลขบัตรประชาชน 13 หลัก
+    function generateRandomCid() {
+      let cid = "1" + Math.floor(100000000000 + Math.random() * 900000000000);
+      document.getElementById('patientCid').value = cid;
+      if (!document.getElementById('patientHn').value) {
+        document.getElementById('patientHn').value = "0" + Math.floor(100000 + Math.random() * 900000);
+      }
+    }
+
+    // จัดการบันทึกข้อมูลแบบฟอร์ม
+    function handleTriageSubmit(e) {
+      e.preventDefault();
+
+      const btnSubmit = document.getElementById('btnSubmitForm');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "กำลังบันทึกข้อมูล...";
+
+      const levelNames = {
+        1: "Resuscitation",
+        2: "Emergency",
+        3: "Urgency",
+        4: "Semi Urgency",
+        5: "Non Urgency"
+      };
+
+      const newPatient = {
+        id: "TRG-" + new Date().toISOString().slice(0, 10).replace(/-/g, '') + "-" + Math.floor(1000 + Math.random() * 9000),
+        timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        cid: document.getElementById('patientCid').value,
+        hn: document.getElementById('patientHn').value || "HN-" + Math.floor(100000 + Math.random() * 900000),
+        prefix: document.getElementById('patientPrefix').value,
+        fullName: document.getElementById('patientFullName').value,
+        age: parseInt(document.getElementById('patientAge').value, 10) || 0,
+        visitDateTime: document.getElementById('patientVisitTime').value.replace('T', ' '),
+        chiefComplaint: document.getElementById('patientComplaint').value,
+        airway: getSegmentedValue('groupAirway'),
+        rr: parseInt(document.getElementById('vitalsRR').value, 10) || 18,
+        o2Sat: parseInt(document.getElementById('vitalsO2').value, 10) || 98,
+        lungSound: document.getElementById('vitalsLung').value || "Clear",
+        pr: parseInt(document.getElementById('vitalsPR').value, 10) || 80,
+        temp: parseFloat(document.getElementById('vitalsTemp').value) || 36.5,
+        bp: document.getElementById('vitalsSBP').value + "/" + document.getElementById('vitalsDBP').value,
+        crt: getSegmentedValue('groupCRT'),
+        bleeding: document.getElementById('vitalsBleeding').value || "ไม่มี",
+        gcs: parseInt(document.getElementById('vitalsGCS').value, 10) || 15,
+        avpu: getSegmentedValue('groupAVPU'),
+        sirsScore: parseInt(document.getElementById('sliderSIRS').value, 10) || 0,
+        painScore: parseInt(document.getElementById('sliderPain').value, 10) || 0,
+        triageLevel: selectedTriageLevel,
+        triageLevelName: levelNames[selectedTriageLevel],
+        servicePoint: getSegmentedValue('groupServicePoint'),
+        note: document.getElementById('patientNote').value,
+        staffName: currentStaff,
+        status: "รอตรวจ"
+      };
+
+      // บันทึกผ่าน Google Apps Script (ถ้าอยู่ใน environment GAS)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(response) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = "<span>💾</span> บันทึก Triage";
+            finishSubmission(newPatient);
+          })
+          .withFailureHandler(function(err) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = "<span>💾</span> บันทึก Triage";
+            alert("GAS Error: " + err);
+            finishSubmission(newPatient); // fallback บันทึกในเครื่อง
+          })
+          .saveTriageData(newPatient);
+      } else {
+        // บันทึกใน LocalStorage
+        setTimeout(() => {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = "<span>💾</span> บันทึก Triage";
+          finishSubmission(newPatient);
+        }, 300);
+      }
+    }
+
+    function finishSubmission(newPatient) {
+      patients.unshift(newPatient);
+      localStorage.setItem('triage_patients_list', JSON.stringify(patients));
+
+      // ส่งเสียงเตือน
+      playHospitalAlertSound(newPatient.triageLevel);
+
+      showToast("บันทึกข้อมูลสำเร็จ! ผู้ป่วย: " + newPatient.fullName + " (Level " + newPatient.triageLevel + ")", "success");
+
+      // รีเซ็ตฟอร์ม
+      document.getElementById('triageForm').reset();
+      setDefaultVisitTime();
+      selectTriageLevel(5);
+      document.getElementById('valSIRS').innerText = "0";
+      document.getElementById('valPain').innerText = "0";
+
+      // สลับไปหน้า Dashboard
+      switchView('dashboard');
+    }
+
+    // อัปเดตสถิติในหน้า Dashboard
+    function updateDashboard() {
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      let underCount = 0;
+      let overCount = 0;
+      let retriageTotal = 0;
+
+      patients.forEach(p => {
+        const lvl = parseInt(p.triageLevel, 10) || 5;
+        if (counts[lvl] !== undefined) counts[lvl]++;
+
+        if (p.triageQuality === "Under-Triage") underCount++;
+        else if (p.triageQuality === "Over-Triage") overCount++;
+
+        if (p.retriageCount && p.retriageCount > 0) retriageTotal += p.retriageCount;
+      });
+
+      document.getElementById('countLvl1').innerText = counts[1];
+      document.getElementById('countLvl2').innerText = counts[2];
+      document.getElementById('countLvl3').innerText = counts[3];
+      document.getElementById('countLvl4').innerText = counts[4];
+      document.getElementById('countLvl5').innerText = counts[5];
+
+      const totalToday = patients.length;
+      document.getElementById('todayTotalCount').innerText = totalToday;
+      document.getElementById('monthTotalCount').innerText = totalToday + 57;
+
+      // Update Quality KPIs
+      const underPct = totalToday > 0 ? ((underCount / totalToday) * 100).toFixed(1) : "0.0";
+      const overPct = totalToday > 0 ? ((overCount / totalToday) * 100).toFixed(1) : "0.0";
+
+      const elUnder = document.getElementById('kpiUnderCount');
+      if (elUnder) {
+        elUnder.innerText = underCount;
+        document.getElementById('kpiUnderPct').innerText = "(" + underPct + "%)";
+        document.getElementById('kpiOverCount').innerText = overCount;
+        document.getElementById('kpiOverPct').innerText = "(" + overPct + "%)";
+        document.getElementById('kpiRetriageCount').innerText = retriageTotal;
+      }
+
+      // Render ตารางผู้ป่วยล่าสุด 20 ราย
+      const tbody = document.getElementById('recentTableBody');
+      const recent = patients.slice(0, 20);
+
+      if (recent.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">ไม่มีข้อมูลผู้ป่วย</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      recent.forEach(p => {
+        let timeStr = "";
+        if (p.visitDateTime && p.visitDateTime.includes(' ')) {
+          timeStr = p.visitDateTime.split(' ')[1] + " น.";
+        } else if (p.timestamp) {
+          timeStr = p.timestamp.slice(11, 16) + " น.";
+        }
+
+        const badgeClass = "lvl" + p.triageLevel;
+        let qualityTag = '';
+        if (p.triageQuality === 'Under-Triage') {
+          qualityTag = `<span style="font-size: 10px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px;">⚠️ Under-Triage</span>`;
+        } else if (p.triageQuality === 'Over-Triage') {
+          qualityTag = `<span style="font-size: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px;">🔽 Over-Triage</span>`;
+        }
+
+        html += `
+          <tr>
+            <td>${timeStr}</td>
+            <td>
+              <strong>${p.prefix} ${p.fullName}</strong>
+              ${qualityTag}
+            </td>
+            <td>
+              <span class="triage-badge ${badgeClass}">
+                <span class="stat-dot" style="background: currentColor;"></span>
+                ${p.triageLevelName || 'Level ' + p.triageLevel}
+              </span>
+            </td>
+            <td>${p.servicePoint || 'ER'}</td>
+            <td>
+              <div style="display: flex; gap: 4px;">
+                <button class="segmented-btn" onclick="openReTriageModal('${p.id}')" style="padding: 4px 8px; font-size: 12px; background: #ecfdf5; color: #047857; border-color: #a7f3d0;">🔄 Re-Triage</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // Render รายการผู้ป่วย (List View)
+    function renderPatientsList() {
+      const container = document.getElementById('patientListContainer');
+      const filtered = getFilteredPatients();
+
+      document.getElementById('listFoundCount').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 40px; color: #94a3b8;">
+            ไม่พบข้อมูลผู้ป่วยตามเงื่อนไขที่ค้นหา
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(p => {
+        let timeStr = "";
+        if (p.visitDateTime) {
+          timeStr = p.visitDateTime.split(' ')[1] || p.visitDateTime;
+        }
+
+        const badgeClass = "lvl" + p.triageLevel;
+        let qualityBadge = '';
+        if (p.triageQuality === 'Under-Triage') {
+          qualityBadge = `<span style="font-size: 11px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 2px 8px; border-radius: 12px; font-weight: 600;">⚠️ Under-Triage</span>`;
+        } else if (p.triageQuality === 'Over-Triage') {
+          qualityBadge = `<span style="font-size: 11px; background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🔽 Over-Triage</span>`;
+        }
+
+        let retriageInfo = '';
+        if (p.retriageCount && p.retriageCount > 0) {
+          retriageInfo = `<span style="color: #047857; font-weight: 500;">🔄 ประเมินซ้ำ ${p.retriageCount} ครั้ง (${p.lastRetriageTime ? p.lastRetriageTime.slice(11, 16) : ''})</span>`;
+        }
+
+        html += `
+          <div class="patient-card">
+            <div class="patient-card-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="patient-name">${p.prefix} ${p.fullName}</div>
+                ${qualityBadge}
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="triage-badge ${badgeClass}">
+                  <span class="stat-dot" style="background: currentColor;"></span>
+                  ${p.triageLevelName || 'Level ' + p.triageLevel}
+                </span>
+                <button class="segmented-btn" onclick="openReTriageModal('${p.id}')" style="padding: 4px 10px; font-size: 12px; background: #047857; color: white;">🔄 Re-Triage</button>
+              </div>
+            </div>
+            <div class="patient-meta">
+              <span>🕒 ${timeStr}</span>
+              <span>🔢 HN: ${p.hn || '-'}</span>
+              <span>📍 ${p.servicePoint || 'ER'}</span>
+              <span>👤 ${p.staffName || '-'}</span>
+              ${retriageInfo}
+            </div>
+            <div class="patient-complaint">
+              ${p.chiefComplaint || '-'}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function getFilteredPatients() {
+      const dateVal = document.getElementById('filterDate').value;
+      const levelVal = document.getElementById('filterLevel').value;
+      const searchVal = (document.getElementById('filterSearch').value || "").toLowerCase().trim();
+
+      return patients.filter(p => {
+        if (levelVal !== 'all' && p.triageLevel !== parseInt(levelVal, 10)) {
+          return false;
+        }
+        if (searchVal !== '') {
+          const matchName = (p.fullName || "").toLowerCase().includes(searchVal);
+          const matchHn = (p.hn || "").toLowerCase().includes(searchVal);
+          const matchCid = (p.cid || "").includes(searchVal);
+          if (!matchName && !matchHn && !matchCid) return false;
+        }
+        return true;
+      });
+    }
+
+    function filterPatientsList() {
+      renderPatientsList();
+    }
+
+    // Render รายงานประจำเดือน (Report View)
+    function renderMonthlyReport() {
+      const monthNames = { 11: "พ.ย.", 12: "ธ.ค.", 1: "ม.ค." };
+      const m = document.getElementById('reportMonth').value;
+      const y = document.getElementById('reportYear').value;
+      
+      const total = patients.length + 57;
+      document.getElementById('reportTitle').innerText = `${monthNames[m] || m} ${y} – รวมทั้งหมด ${total} ราย`;
+
+      // Level Breakdown Progress
+      const lvlCounts = { 1: 0, 2: 5, 3: 18, 4: 36, 5: 7 };
+      patients.forEach(p => {
+        const l = p.triageLevel;
+        if (lvlCounts[l] !== undefined) lvlCounts[l]++;
+      });
+
+      const totalCalculated = Object.values(lvlCounts).reduce((a, b) => a + b, 0);
+
+      const levelDefs = [
+        { lvl: 1, name: "Resuscitation", color: "var(--color-lvl1)" },
+        { lvl: 2, name: "Emergency", color: "var(--color-lvl2)" },
+        { lvl: 3, name: "Urgency", color: "var(--color-lvl3)" },
+        { lvl: 4, name: "Semi Urgency", color: "var(--color-lvl4)" },
+        { lvl: 5, name: "Non Urgency", color: "var(--color-lvl5)" }
+      ];
+
+      let barsHtml = '';
+      levelDefs.forEach(item => {
+        const count = lvlCounts[item.lvl] || 0;
+        const pct = totalCalculated > 0 ? Math.round((count / totalCalculated) * 100) : 0;
+        barsHtml += `
+          <div style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 4px;">
+              <span><span class="stat-dot" style="background: ${item.color};"></span> ${item.name}</span>
+              <span>${count} ราย (${pct}%)</span>
+            </div>
+            <div style="height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
+              <div style="height: 100%; width: ${pct}%; background: ${item.color}; border-radius: 6px;"></div>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('reportLevelBars').innerHTML = barsHtml;
+
+      // Table จุดบริการ
+      const serviceTable = document.getElementById('reportServiceTable');
+      serviceTable.innerHTML = `
+        <tr>
+          <td>ER</td>
+          <td>63</td>
+          <td>95.5%</td>
+        </tr>
+        <tr>
+          <td>OPD</td>
+          <td>3</td>
+          <td>4.5%</td>
+        </tr>
+      `;
+
+      // Calendar Grid Heatmap (30 วัน)
+      const cal = document.getElementById('calendarGrid');
+      let calHtml = `
+        <div style="font-weight: 600; color: #475569;">อา</div>
+        <div style="font-weight: 600; color: #475569;">จ</div>
+        <div style="font-weight: 600; color: #475569;">อ</div>
+        <div style="font-weight: 600; color: #475569;">พ</div>
+        <div style="font-weight: 600; color: #475569;">พฤ</div>
+        <div style="font-weight: 600; color: #475569;">ศ</div>
+        <div style="font-weight: 600; color: #475569;">ส</div>
+      `;
+
+      const dayCounts = { 1: 21, 2: 36, 3: 9 };
+      for (let day = 1; day <= 30; day++) {
+        const val = dayCounts[day] || "";
+        const bg = val ? (day === 2 ? '#2e7d32; color: white;' : (day === 1 ? '#4caf50; color: white;' : '#a5d6a7; color: #1e293b;')) : '#f8fafc; border: 1px solid #e2e8f0;';
+        calHtml += `
+          <div style="background: ${bg}; padding: 8px 4px; border-radius: 6px; min-height: 48px;">
+            <div style="font-weight: 500;">${day}</div>
+            <div style="font-weight: 700; font-size: 13px;">${val}</div>
+          </div>
+        `;
+      }
+      cal.innerHTML = calHtml;
+    }
+
+    // เสียงแจ้งเตือน ER Alert ด้วย Web Audio API
+    function playHospitalAlertSound(level) {
+      if (!audioAlertEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        if (level === 1) {
+          // Siren tone สำหรับ Resuscitation
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.8);
+        } else {
+          // Double Hospital Chime (Ding-Dong)
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+          gain1.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc1.start();
+          osc1.stop(ctx.currentTime + 0.4);
+
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.2); // A5
+          gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.2);
+          gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
+          osc2.start(ctx.currentTime + 0.2);
+          osc2.stop(ctx.currentTime + 0.7);
+        }
+      } catch (e) {
+        console.warn("Audio Context error:", e);
+      }
+    }
+
+    function toggleAudioAlert() {
+      audioAlertEnabled = !audioAlertEnabled;
+      const btn = document.getElementById('btnToggleSound');
+      const icon = document.getElementById('soundIcon');
+      const text = document.getElementById('soundText');
+
+      if (audioAlertEnabled) {
+        btn.classList.remove('muted');
+        icon.innerText = "🔊";
+        text.innerText = "เปิดเสียงอยู่";
+        playHospitalAlertSound(3); // Test sound
+      } else {
+        btn.classList.add('muted');
+        icon.innerText = "🔇";
+        text.innerText = "ปิดเสียง";
+      }
+    }
+
+    // Modal Controllers
+    function openQuickGuideModal() {
+      document.getElementById('modalQuickGuide').classList.add('active');
+    }
+    function closeQuickGuideModal() {
+      document.getElementById('modalQuickGuide').classList.remove('active');
+    }
+
+    function openSettingsModal() {
+      document.getElementById('modalSettings').classList.add('active');
+    }
+    function closeSettingsModal() {
+      document.getElementById('modalSettings').classList.remove('active');
+    }
+
+    function saveSettingsAction() {
+      const h = document.getElementById('settingHospital').value;
+      const s = document.getElementById('settingStaff').value;
+      const t = document.getElementById('settingLineToken').value;
+
+      currentHospital = h;
+      currentStaff = s;
+      lineNotifyToken = t;
+
+      localStorage.setItem('hospital_name', h);
+      localStorage.setItem('staff_name', s);
+      localStorage.setItem('line_token', t);
+
+      document.getElementById('appHospitalSub').innerText = h;
+      document.getElementById('staffDisplay').innerText = s;
+
+      closeSettingsModal();
+      showToast("บันทึกการตั้งค่าเรียบร้อยแล้ว", "success");
+    }
+
+    function testLineNotifyAction() {
+      const token = document.getElementById('settingLineToken').value;
+      if (!token) {
+        alert("กรุณากรอก LINE Notify Token ก่อนทดสอบ");
+        return;
+      }
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            alert(res.message);
+          })
+          .testLineNotify(token);
+      } else {
+        showToast("จำลองการส่ง LINE Notify สำเร็จ!", "success");
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.getElementById('systemToast');
+      const msg = document.getElementById('toastMessage');
+      const icon = document.getElementById('toastIcon');
+
+      msg.innerText = message;
+      toast.className = 'toast ' + type;
+      icon.innerText = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 4000);
+    }
+
+    // ==========================================
+    // QUICK GUIDE CONTROLLER (4 TABS & SEARCH)
+    // ==========================================
+    function openQuickGuideTab(tabIdx) {
+      openQuickGuideModal();
+      switchGuideTab(tabIdx);
+    }
+
+    function switchGuideTab(tabIdx) {
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById('tabGuideBtn' + i);
+        const pane = document.getElementById('guideTab' + i);
+        if (btn) btn.classList.remove('active');
+        if (pane) pane.style.display = 'none';
+      }
+      const activeBtn = document.getElementById('tabGuideBtn' + tabIdx);
+      const activePane = document.getElementById('guideTab' + tabIdx);
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activePane) activePane.style.display = 'block';
+    }
+
+    function filterGuideSymptoms() {
+      const search = (document.getElementById('guideSearchInput').value || "").toLowerCase().trim();
+      const items = document.querySelectorAll('.guide-item');
+      items.forEach(el => {
+        const kw = el.getAttribute('data-keywords') || "";
+        const text = el.innerText.toLowerCase();
+        if (search === '' || kw.includes(search) || text.includes(search)) {
+          el.style.display = 'block';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    }
+
+    // ==========================================
+    // RE-TRIAGE CONTROLLER & MODAL
+    // ==========================================
+    let currentReTriagePatient = null;
+    let reTriageSelectedLevel = 5;
+
+    function openReTriageModal(patientId) {
+      const p = patients.find(item => item.id === patientId);
+      if (!p) {
+        alert("ไม่พบข้อมูลผู้ป่วย");
+        return;
+      }
+      currentReTriagePatient = p;
+      reTriageSelectedLevel = p.triageLevel || 5;
+
+      document.getElementById('retriagePatientName').innerText = `${p.prefix} ${p.fullName} (${p.age || '-'} ปี)`;
+      document.getElementById('retriagePatientHN').innerText = `HN: ${p.hn || '-'}`;
+      document.getElementById('retriageVisitTime').innerText = p.visitDateTime || p.timestamp || '-';
+
+      const origLvl = p.originalLevel || p.triageLevel || 5;
+      const origBadge = document.getElementById('retriageOriginalLevelBadge');
+      origBadge.className = 'triage-badge lvl' + origLvl;
+      origBadge.innerText = 'Level ' + origLvl;
+
+      // ตั้งค่าสัญญาณชีพตั้งต้นจากข้อมูลปัจจุบัน
+      let sbpVal = 120, dbpVal = 80;
+      if (p.bp && p.bp.includes('/')) {
+        const parts = p.bp.split('/');
+        sbpVal = parseInt(parts[0], 10) || 120;
+        dbpVal = parseInt(parts[1], 10) || 80;
+      }
+      document.getElementById('reSBP').value = sbpVal;
+      document.getElementById('reDBP').value = dbpVal;
+      document.getElementById('rePR').value = p.pr || 80;
+      document.getElementById('reRR').value = p.rr || 18;
+      document.getElementById('reO2').value = p.o2Sat || 98;
+      document.getElementById('reTemp').value = p.temp || 36.5;
+      document.getElementById('rePain').value = p.painScore || 0;
+      document.getElementById('reReasonText').value = '';
+      document.getElementById('reStaffName').value = currentStaff;
+
+      setReTriageSelectedLevel(reTriageSelectedLevel);
+      document.getElementById('modalReTriage').classList.add('active');
+    }
+
+    function closeReTriageModal() {
+      document.getElementById('modalReTriage').classList.remove('active');
+      currentReTriagePatient = null;
+    }
+
+    function setReTriageSelectedLevel(lvl) {
+      reTriageSelectedLevel = lvl;
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById('btnReLvl' + i);
+        if (btn) {
+          if (i === lvl) {
+            btn.classList.add('active');
+            btn.style.boxShadow = '0 0 0 2px var(--primary-green)';
+          } else {
+            btn.classList.remove('active');
+            btn.style.boxShadow = 'none';
+          }
+        }
+      }
+      updateReTriageQualityCalculation();
+    }
+
+    function updateReTriageQualityCalculation() {
+      if (!currentReTriagePatient) return;
+      const origLvl = currentReTriagePatient.originalLevel || currentReTriagePatient.triageLevel || 5;
+      const newLvl = reTriageSelectedLevel;
+
+      const banner = document.getElementById('retriageQualityBanner');
+      const icon = document.getElementById('retriageQualityIcon');
+      const title = document.getElementById('retriageQualityTitle');
+      const desc = document.getElementById('retriageQualityDesc');
+
+      if (newLvl < origLvl) {
+        // Under-Triage (คนไข้ทรุดลง หรือคัดกรองรอบแรกเบากว่าความจริง)
+        banner.style.background = '#fef2f2';
+        banner.style.borderColor = '#fca5a5';
+        icon.innerText = '⚠️';
+        title.style.color = '#b91c1c';
+        title.innerText = '⚠️ ตรวจพบ Under-Triage (ผู้ป่วยอาการทรุดลง / แรกรับเบากว่าจริง)';
+        desc.style.color = '#991b1b';
+        desc.innerText = `ปรับระดับจาก Level ${origLvl} ➔ Level ${newLvl} (วิกฤตความปลอดภัย: เกณฑ์เป้าหมาย < 5%) ต้องรีบแจ้งแพทย์และให้การรักษาทันที`;
+      } else if (newLvl > origLvl) {
+        // Over-Triage (อาการดีขึ้น หรือปรับระดับลง)
+        banner.style.background = '#fffbeb';
+        banner.style.borderColor = '#fcd34d';
+        icon.innerText = '🔽';
+        title.style.color = '#b45309';
+        title.innerText = '🔽 Over-Triage (ผู้ป่วยอาการทุเลาลง / ปรับระดับลดลง)';
+        desc.style.color = '#92400e';
+        desc.innerText = `ปรับระดับจาก Level ${origLvl} ➔ Level ${newLvl} (เกณฑ์ยอมรับได้ 25-50% เพื่อเป็น Safety margin)`;
+      } else {
+        // Appropriate (คงที่)
+        banner.style.background = '#f0fdf4';
+        banner.style.borderColor = '#bbf7d0';
+        icon.innerText = '✅';
+        title.style.color = '#166534';
+        title.innerText = '✅ Appropriate Triage (ระดับคงที่ตามเกณฑ์มาตรฐาน)';
+        desc.style.color = '#14532d';
+        desc.innerText = `ระดับยังคงอยู่ที่ Level ${newLvl} สัญญาณชีพและอาการสอดคล้องตามรอบเวลาเฝ้าระวัง`;
+      }
+    }
+
+    function onReReasonChange() {
+      const sel = document.getElementById('reReasonSelect').value;
+      const txt = document.getElementById('reReasonText');
+      if (sel === 'อื่นๆ') {
+        txt.focus();
+      } else if (!txt.value) {
+        txt.value = sel;
+      }
+    }
+
+    function submitReTriageAction() {
+      if (!currentReTriagePatient) return;
+
+      const p = currentReTriagePatient;
+      const oldLvl = p.triageLevel || 5;
+      const origLvl = p.originalLevel || oldLvl;
+      const newLvl = reTriageSelectedLevel;
+
+      let quality = "Appropriate";
+      if (newLvl < origLvl) quality = "Under-Triage";
+      else if (newLvl > origLvl) quality = "Over-Triage";
+
+      const levelNames = {
+        1: "Resuscitation",
+        2: "Emergency",
+        3: "Urgency",
+        4: "Semi Urgency",
+        5: "Non Urgency"
+      };
+
+      const sbp = parseInt(document.getElementById('reSBP').value, 10) || 120;
+      const dbp = parseInt(document.getElementById('reDBP').value, 10) || 80;
+      const pr = parseInt(document.getElementById('rePR').value, 10) || 80;
+      const rr = parseInt(document.getElementById('reRR').value, 10) || 18;
+      const o2 = parseInt(document.getElementById('reO2').value, 10) || 98;
+      const temp = parseFloat(document.getElementById('reTemp').value) || 36.5;
+      const pain = parseInt(document.getElementById('rePain').value, 10) || 0;
+      const reasonSel = document.getElementById('reReasonSelect').value;
+      const reasonDetail = document.getElementById('reReasonText').value;
+      const fullReason = reasonDetail ? `${reasonSel}: ${reasonDetail}` : reasonSel;
+      const staff = document.getElementById('reStaffName').value || currentStaff;
+      const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+      const retriageRecord = {
+        oldLevel: oldLvl,
+        newLevel: newLvl,
+        qualityCategory: quality,
+        timestamp: nowStr,
+        reason: fullReason,
+        reassessedBy: staff,
+        vitals: { sbp, dbp, pr, rr, o2Sat: o2, temp, pain, gcs: p.gcs || 15 },
+        patientName: p.fullName,
+        hn: p.hn
+      };
+
+      // อัปเดตใน JavaScript state
+      p.originalLevel = origLvl;
+      p.triageLevel = newLvl;
+      p.triageLevelName = levelNames[newLvl];
+      p.triageQuality = quality;
+      p.bp = sbp + "/" + dbp;
+      p.pr = pr;
+      p.rr = rr;
+      p.o2Sat = o2;
+      p.temp = temp;
+      p.painScore = pain;
+      p.retriageCount = (p.retriageCount || 0) + 1;
+      p.lastRetriageTime = nowStr;
+
+      if (!p.retriageHistory) p.retriageHistory = [];
+      p.retriageHistory.unshift(retriageRecord);
+
+      localStorage.setItem('triage_patients_list', JSON.stringify(patients));
+
+      // ส่งคำสั่ง Re-Triage ไปยัง Google Apps Script (ถ้าอยู่ใน GAS)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            console.log("GAS saveReTriage success:", res);
+          })
+          .saveReTriage(p.id, retriageRecord);
+      }
+
+      // เล่นเสียงเตือนหากปรับเป็น Level 1 หรือ Level 2
+      if (newLvl === 1 || newLvl === 2) {
+        playHospitalAlertSound(newLvl);
+      }
+
+      closeReTriageModal();
+      updateDashboard();
+      renderPatientsList();
+      showToast(`บันทึก Re-Triage สำเร็จ: ${p.fullName} ➔ Level ${newLvl} (${quality})`, quality === "Under-Triage" ? "error" : "success");
+    }
+
+    // ==========================================
+    // EXPORT EXCEL & PDF FUNCTIONS
+    // ==========================================
+    function exportToExcel() {
+      if (!patients || patients.length === 0) {
+        alert("ไม่มีข้อมูลสำหรับส่งออก");
+        return;
+      }
+      
+      const headers = [
+        "ลำดับ", "รหัส Triage", "วันเวลา", "HN", "เลขบัตรประชาชน (CID)", "คำนำหน้า", "ชื่อ-นามสกุล",
+        "อายุ", "ระดับ Triage", "ความรุนแรง", "จุดบริการ", "อาการสำคัญ",
+        "BP (mmHg)", "PR (/min)", "RR (/min)", "SpO2 (%)", "Temp (°C)",
+        "GCS", "AVPU", "Pain Score", "SIRS Score", "Airway", "Lung Sound",
+        "ระดับแรกรับ (Original)", "คุณภาพ Triage (Under/Over)", "จำนวนครั้ง Re-Triage", "เวลา Re-Triage ล่าสุด",
+        "หมายเหตุ/การดูแลเบื้องต้น", "ผู้คัดกรอง", "สถานะ"
+      ];
+      
+      let csvContent = "\uFEFF"; // UTF-8 BOM สำหรับ Microsoft Excel ภาษาไทย
+      csvContent += headers.map(h => `"${h}"`).join(",") + "\r\n";
+      
+      patients.forEach((p, idx) => {
+        const row = [
+          idx + 1,
+          p.id || '',
+          p.visitDateTime || p.timestamp || '',
+          p.hn || '',
+          p.cid || '',
+          p.prefix || '',
+          p.fullName || '',
+          p.age || '',
+          "Level " + (p.triageLevel || ''),
+          p.triageLevelName || '',
+          p.servicePoint || '',
+          (p.chiefComplaint || '').replace(/"/g, '""'),
+          p.bp || '',
+          p.pr || '',
+          p.rr || '',
+          p.o2Sat || '',
+          p.temp || '',
+          p.gcs || '',
+          p.avpu || '',
+          p.painScore || 0,
+          p.sirsScore || 0,
+          p.airway || '',
+          p.lungSound || '',
+          "Level " + (p.originalLevel || p.triageLevel || ''),
+          p.triageQuality || 'Appropriate',
+          p.retriageCount || 0,
+          p.lastRetriageTime || '',
+          (p.note || '').replace(/"/g, '""'),
+          p.staffName || '',
+          p.status || ''
+        ];
+        csvContent += row.map(cell => `"${String(cell)}"`).join(",") + "\r\n";
+      });
+      
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const filename = "Triage_LuangPhorPern_Hospital_" + new Date().toISOString().slice(0, 10) + ".csv";
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast("ส่งออกไฟล์ Excel สำเร็จ!", "success");
+    }
+
+    function exportToPdf() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

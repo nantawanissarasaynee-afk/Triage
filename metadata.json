@@ -1,0 +1,6 @@
+{
+  "name": "MOPH ED Triage System - โรงพยาบาลหลวงพ่อเปิ่น",
+  "description": "ระบบคัดกรองผู้ป่วยฉุกเฉิน MOPH ED Triage 5 ระดับ โรงพยาบาลหลวงพ่อเปิ่น พร้อม Re-Triage, Under/Over Triage และส่งออก Excel/PDF",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
